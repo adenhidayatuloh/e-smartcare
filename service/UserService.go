@@ -113,7 +113,18 @@ func (u *userService) Login(payload *dto.LoginRequest) (*dto.LoginResponse, errs
 		return nil, err2
 	}
 
-	response := &dto.LoginResponse{Token: token}
+	role := ""
+
+	if user.JenisAkun == "1" {
+		role = "admin"
+
+	} else if user.JenisAkun == "2" {
+		role = "pakar"
+	} else {
+		role = "siswa"
+	}
+
+	response := &dto.LoginResponse{Token: token, Role: role}
 
 	return response, nil
 }

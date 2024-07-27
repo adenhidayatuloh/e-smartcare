@@ -24,6 +24,7 @@ type LoginRequest struct {
 
 type LoginResponse struct {
 	Token string `json:"token" binding:"jwt"`
+	Role  string `json:"role"`
 }
 
 // type UpdateUserRequest struct {
