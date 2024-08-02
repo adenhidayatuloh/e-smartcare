@@ -143,7 +143,7 @@ func (h *TanyaJawabHandler) ChatSimmilarityBot(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, gin.H{"data": tanyaJawab})
+	ctx.JSON(http.StatusOK, gin.H{"data": tanyaJawab})
 }
 
 func (h *TanyaJawabHandler) ChatBot(ctx *gin.Context) {
@@ -153,22 +153,23 @@ func (h *TanyaJawabHandler) ChatBot(ctx *gin.Context) {
 		return
 	}
 
-	Jawaban, err := h.service.GetChatQuestion(request.Pertanyaan)
+	Jawaban, Kemiripan, err := h.service.GetChatQuestion(request.Pertanyaan)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, gin.H{
+	ctx.JSON(http.StatusOK, gin.H{
 		"pertanyaan": request.Pertanyaan,
-		"jawaban":    Jawaban})
+		"jawaban":    Jawaban,
+		"kemiripan":  Kemiripan})
 }
 
 func (h *TanyaJawabHandler) Update_Bot(c *gin.Context) {
 
-	var faqs []entity.TanyaJawab
+	var faqs []entity.FAQ
 
-	faqs, err := h.service.GetTanyaJawabByValidationStatus(true)
+	faqs, err := h.service.GetChatBotUpdate()
 
 	if err == nil {
 

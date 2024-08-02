@@ -11,3 +11,9 @@ type TanyaJawab struct {
 func (TanyaJawab) TableName() string {
 	return "tanya_jawab"
 }
+
+type FAQ struct {
+	Question string
+	Answer   string
+	Topic    string
+}

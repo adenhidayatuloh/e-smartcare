@@ -2,6 +2,7 @@ package tanyajawabmysql
 
 import (
 	"esmartcare/entity"
+	"log"
 
 	TanyaJawabRepository "esmartcare/repository/tanyaJawabRepository"
 
@@ -10,6 +11,28 @@ import (
 
 type tanyaJawabRepository struct {
 	db *gorm.DB
+}
+
+// FindForChatbot implements TanyaJawabrepository.TanyaJawabRepository.
+func (r *tanyaJawabRepository) FindForChatbot() ([]entity.FAQ, error) {
+	// Raw SQL
+	rows, err := r.db.Raw("SELECT pertanyaan, jawaban, validator FROM tanya_jawab WHERE validator IS NOT NULL AND validator != ''").Rows()
+
+	if err != nil {
+		return nil, err
+	}
+	var faqs []entity.FAQ
+	defer rows.Close()
+	for rows.Next() {
+		var faq entity.FAQ
+		if err := rows.Scan(&faq.Question, &faq.Answer, &faq.Topic); err != nil {
+			log.Fatal(err)
+		}
+		faq.Topic = "stunting"
+		faqs = append(faqs, faq)
+	}
+
+	return faqs, nil
 }
 
 func NewTanyaJawabRepository(db *gorm.DB) TanyaJawabRepository.TanyaJawabRepository {

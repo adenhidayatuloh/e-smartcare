@@ -21,11 +21,17 @@ type TanyaJawabService interface {
 	UpdateValidator(id int, validator string) (entity.TanyaJawab, error)
 	DeleteTanyaJawab(id int) error
 	GetSimillaryQuestion(newQuestion string) ([]string, error)
-	GetChatQuestion(newQuestion string) (string, error)
+	GetChatQuestion(newQuestion string) (string, string, error)
+	GetChatBotUpdate() ([]entity.FAQ, error)
 }
 
 type tanyaJawabService struct {
 	repo TanyaJawabRepository.TanyaJawabRepository
+}
+
+// GetChatBotUpdate implements TanyaJawabService.
+func (s *tanyaJawabService) GetChatBotUpdate() ([]entity.FAQ, error) {
+	return s.repo.FindForChatbot()
 }
 
 func NewTanyaJawabService(repo TanyaJawabRepository.TanyaJawabRepository) TanyaJawabService {
@@ -88,6 +94,7 @@ func (s *tanyaJawabService) GetSimillaryQuestion(newQuestion string) ([]string, 
 	type FAQ struct {
 		Question string
 		Answer   string
+		Topic    string
 	}
 
 	var faqs []FAQ
@@ -119,9 +126,18 @@ func (s *tanyaJawabService) GetSimillaryQuestion(newQuestion string) ([]string, 
 
 	defer index.Close()
 
-	// Pencarian di indeks untuk mendapatkan daftar pertanyaan relevan
-	query := bleve.NewMatchQuery(newQuestion)
-	searchRequest := bleve.NewSearchRequest(query)
+	questionQuery := bleve.NewMatchQuery(newQuestion)
+	questionQuery.SetField("Question")
+
+	// Query untuk mencocokkan topik
+	topicQuery := bleve.NewMatchQuery(newQuestion)
+	topicQuery.SetField("Topic")
+
+	mainQuery := bleve.NewBooleanQuery()
+	mainQuery.AddMust(questionQuery) // Pertanyaan baru harus cocok
+	mainQuery.AddMust(topicQuery)
+
+	searchRequest := bleve.NewSearchRequest(mainQuery)
 	searchRequest.Size = 5 // Batasi jumlah hasil yang ditampilkan
 	searchResult, err := index.Search(searchRequest)
 	if err != nil {
@@ -133,8 +149,10 @@ func (s *tanyaJawabService) GetSimillaryQuestion(newQuestion string) ([]string, 
 	fmt.Println("Rekomendasi Pertanyaan:")
 	for _, hit := range searchResult.Hits {
 		index, _ := strconv.Atoi(hit.ID)
+		similarity := hit.Score * 100
+		rekomendasi := fmt.Sprintf("%s (%.2f%% kemiripan)", faqs[index].Question, similarity)
 
-		listSimilarity = append(listSimilarity, faqs[index].Question)
+		listSimilarity = append(listSimilarity, rekomendasi)
 
 	}
 
@@ -142,10 +160,11 @@ func (s *tanyaJawabService) GetSimillaryQuestion(newQuestion string) ([]string, 
 
 }
 
-func (s *tanyaJawabService) GetChatQuestion(newQuestion string) (string, error) {
+func (s *tanyaJawabService) GetChatQuestion(newQuestion string) (string, string, error) {
 	type FAQ struct {
 		Question string
 		Answer   string
+		Topic    string
 	}
 
 	var faqs []FAQ
@@ -157,13 +176,14 @@ func (s *tanyaJawabService) GetChatQuestion(newQuestion string) (string, error) 
 		newFaqs := FAQ{
 			Question: v.Pertanyaan,
 			Answer:   v.Jawaban,
+			Topic:    "stunting",
 		}
 
 		faqs = append(faqs, newFaqs)
 	}
 
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	// Buat atau buka indeks Bleve
@@ -171,14 +191,23 @@ func (s *tanyaJawabService) GetChatQuestion(newQuestion string) (string, error) 
 	index, err := bleve.Open("faq.bleve")
 
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	defer index.Close()
 
 	// Pencarian di indeks untuk mendapatkan daftar pertanyaan relevan
-	query := bleve.NewMatchQuery(newQuestion)
-	searchRequest := bleve.NewSearchRequest(query)
+	questionQuery := bleve.NewMatchQuery(newQuestion)
+	questionQuery.SetField("Question")
+
+	// Query untuk mencocokkan topik
+	topicQuery := bleve.NewMatchQuery(newQuestion)
+	topicQuery.SetField("Topic")
+
+	mainQuery := bleve.NewBooleanQuery()
+	mainQuery.AddMust(questionQuery) // Pertanyaan baru harus cocok
+	mainQuery.AddMust(topicQuery)
+	searchRequest := bleve.NewSearchRequest(mainQuery)
 	searchRequest.Size = 5 // Batasi jumlah hasil yang ditampilkan
 	searchResult, err := index.Search(searchRequest)
 	if err != nil {
@@ -186,14 +215,17 @@ func (s *tanyaJawabService) GetChatQuestion(newQuestion string) (string, error) 
 	}
 
 	jawaban := ""
+	kemiripan := ""
 
 	if len(searchResult.Hits) > 0 {
 		mostRelevantIndex := searchResult.Hits[0].ID
 		mostRelevantIndexInt, _ := strconv.Atoi(mostRelevantIndex)
 		jawaban = faqs[mostRelevantIndexInt].Answer
+		similarity := searchResult.Hits[0].Score * 100
+		kemiripan = fmt.Sprintf("%.2f%%", similarity)
 	} else {
 		jawaban = "Jawaban tidak ditemukan"
 	}
 
-	return jawaban, nil
+	return jawaban, kemiripan, nil
 }

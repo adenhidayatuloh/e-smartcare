@@ -11,4 +11,5 @@ type TanyaJawabRepository interface {
 	Create(tanyaJawab entity.TanyaJawab) (entity.TanyaJawab, error)
 	Update(tanyaJawab entity.TanyaJawab) (entity.TanyaJawab, error)
 	Delete(id int) error
+	FindForChatbot() ([]entity.FAQ, error)
 }
