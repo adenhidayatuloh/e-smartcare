@@ -9,7 +9,7 @@ import (
 
 	_ "github.com/joho/godotenv/autoload"
 
-	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
@@ -24,16 +24,17 @@ var (
 )
 
 func GetDBConfig() gorm.Dialector {
+
 	dbConfig := fmt.Sprintf(
-		"%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
-		user,
-		password,
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable TimeZone=Asia/Jakarta",
 		host,
 		port,
+		user,
+		password,
 		dbname,
 	)
 
-	return mysql.Open(dbConfig)
+	return postgres.Open(dbConfig)
 }
 
 func GetDBInstance() *gorm.DB {

@@ -27,7 +27,7 @@ type ResultsJoinUsers struct {
 
 // TableName method sets the table name to `user`
 func (User) TableName() string {
-	return "user"
+	return "users"
 }
 
 func (u *User) HashPassword() errs.MessageErr {

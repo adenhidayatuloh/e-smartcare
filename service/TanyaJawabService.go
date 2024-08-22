@@ -219,7 +219,12 @@ func (s *tanyaJawabService) GetChatQuestion(newQuestion string) (string, string,
 
 	if len(searchResult.Hits) > 0 {
 		mostRelevantIndex := searchResult.Hits[0].ID
+
 		mostRelevantIndexInt, _ := strconv.Atoi(mostRelevantIndex)
+
+		fmt.Println(mostRelevantIndexInt)
+
+		fmt.Println(len(faqs))
 		jawaban = faqs[mostRelevantIndexInt].Answer
 		similarity := searchResult.Hits[0].Score * 100
 		kemiripan = fmt.Sprintf("%.2f%%", similarity)
