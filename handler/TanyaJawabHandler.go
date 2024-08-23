@@ -173,8 +173,6 @@ func (h *TanyaJawabHandler) Update_Bot(c *gin.Context) {
 
 	if err == nil {
 
-		fmt.Print(len(faqs))
-
 		// Buat atau buka indeks Bleve
 		indexMapping := bleve.NewIndexMapping()
 		index, err := bleve.Open("faq.bleve")

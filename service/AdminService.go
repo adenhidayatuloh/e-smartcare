@@ -16,16 +16,37 @@ type AdminService interface {
 	CreateOrUpdateAdminWithProfilPhoto(email string, payload *dto.CreateAdminRequest, ctx *gin.Context) (*dto.CreateAdminResponse, errs.MessageErr)
 	UpdateProfilPhoto(email string, ctx *gin.Context) (*dto.CreateAdminResponse, errs.MessageErr)
 	CreateOrUpdateAdmin(email string, payload *dto.CreateAdminRequest) (*dto.CreateAdminResponse, errs.MessageErr)
+	GetAdmin(email string) (*dto.CreateAdminResponse, errs.MessageErr)
 }
 
 type adminService struct {
 	AdminRepo AdminRepository.AdminRepository
 }
 
+// GetAdmin implements AdminService.
+func (s *adminService) GetAdmin(email string) (*dto.CreateAdminResponse, errs.MessageErr) {
+	admin, err := s.AdminRepo.GetAdminByEmail(email)
+
+	if err != nil {
+		return nil, err
+	}
+	AdminResponse := &dto.CreateAdminResponse{
+		Email: admin.Email,
+
+		NamaLengkap: admin.NamaLengkap,
+
+		Alamat:    admin.Alamat,
+		NoTelepon: admin.NoTelepon,
+
+		FotoProfil: admin.FotoProfil,
+	}
+
+	return AdminResponse, nil
+
+}
+
 // UpdateProfilPhoto implements adminService.
 func (s *adminService) UpdateProfilPhoto(email string, ctx *gin.Context) (*dto.CreateAdminResponse, errs.MessageErr) {
-
-	urlImageNew := ""
 	oldAdmin, checkEmail := s.AdminRepo.GetAdminByEmail(email)
 
 	if checkEmail != nil {
@@ -33,6 +54,7 @@ func (s *adminService) UpdateProfilPhoto(email string, ctx *gin.Context) (*dto.C
 	}
 
 	urlImage, err := pkg.UploadImage("foto_profil", oldAdmin.Email, ctx)
+	// Di sini logic nya
 
 	if err != nil {
 		return nil, err
@@ -42,26 +64,10 @@ func (s *adminService) UpdateProfilPhoto(email string, ctx *gin.Context) (*dto.C
 		return nil, errs.NewBadRequest("Image not detected")
 	}
 
-	urlImageNew = strings.Replace(*urlImage, "-temp", "", -1)
-
-	if oldAdmin.FotoProfil != "" {
-		// Delete the old image only after the new image is uploaded successfully
-		errDeleteImage := pkg.DeleteImage(oldAdmin.FotoProfil)
-		if errDeleteImage != nil {
-			return nil, errDeleteImage
-		}
-	}
-
-	// Rename the new image from temporary to final name
-	err = pkg.RenameImage(*urlImage, urlImageNew)
-	if err != nil {
-		return nil, errs.NewInternalServerError("Error on upload image")
-	}
-
 	NewAdmin := entity.Admin{
 		Email: email,
 
-		FotoProfil: urlImageNew,
+		FotoProfil: *urlImage,
 	}
 
 	// Update the student record

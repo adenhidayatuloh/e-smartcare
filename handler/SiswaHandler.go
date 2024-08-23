@@ -102,3 +102,21 @@ func (h *SiswaHandler) GetAllSiswaWithPemeriksaan(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, siswa)
 }
+
+func (h *SiswaHandler) GetSiswa(ctx *gin.Context) {
+
+	userData, ok := ctx.MustGet("userData").(*entity.User)
+
+	if !ok {
+		newError := errs.NewBadRequest("Failed to get user data")
+		ctx.JSON(newError.StatusCode(), newError)
+		return
+	}
+
+	siswa, err := h.siswaService.GetSiswa(userData.Email)
+	if err != nil {
+		ctx.JSON(err.StatusCode(), err)
+		return
+	}
+	ctx.JSON(http.StatusOK, siswa)
+}

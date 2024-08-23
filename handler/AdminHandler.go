@@ -93,3 +93,23 @@ func (s *AdminHandler) CreateOrUpdateAdmin(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusCreated, registeredUser)
 }
+
+func (s *AdminHandler) GetAdmin(ctx *gin.Context) {
+	userData, ok := ctx.MustGet("userData").(*entity.User)
+
+	if !ok {
+		newError := errs.NewBadRequest("Failed to get user data")
+		ctx.JSON(newError.StatusCode(), newError)
+		return
+	}
+
+	// Retrieve JSON part from form-data
+
+	admin, err := s.AdminService.GetAdmin(userData.Email)
+	if err != nil {
+		ctx.JSON(err.StatusCode(), err)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, admin)
+}

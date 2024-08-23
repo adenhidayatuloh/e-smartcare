@@ -93,3 +93,23 @@ func (s *PakarHandler) CreateOrUpdatePakar(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusCreated, registeredUser)
 }
+
+func (s *PakarHandler) GetPakar(ctx *gin.Context) {
+	userData, ok := ctx.MustGet("userData").(*entity.User)
+
+	if !ok {
+		newError := errs.NewBadRequest("Failed to get user data")
+		ctx.JSON(newError.StatusCode(), newError)
+		return
+	}
+
+	// Retrieve JSON part from form-data
+
+	pakar, err := s.PakarService.GetPakar(userData.Email)
+	if err != nil {
+		ctx.JSON(err.StatusCode(), err)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, pakar)
+}

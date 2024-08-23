@@ -71,6 +71,7 @@ func StartApp() {
 		UsersRoute.POST("/register", userHandler.Register)
 		UsersRoute.POST("/login", userHandler.Login)
 		UsersRoute.GET("/", authService.Authentication(), authService.AdminAuthorization(), userHandler.GettAllUsers)
+		UsersRoute.GET("/all-data-users", authService.Authentication(), authService.AdminAndPakarAuthorization(), userHandler.GetAllDataUser)
 		UsersRoute.GET("/not-validate", authService.Authentication(), authService.AdminAuthorization(), userHandler.GettAllUsersNotValidate)
 		UsersRoute.PUT("/update-user/:email", authService.Authentication(), authService.AdminAuthorization(), userHandler.UpdateUser)
 		UsersRoute.DELETE("/delete-account/:email", authService.Authentication(), authService.AdminAuthorization(), userHandler.DeleteUser)
@@ -78,7 +79,7 @@ func StartApp() {
 
 	SiswaRoute := route.Group("/siswa")
 	{
-
+		SiswaRoute.GET("/", authService.Authentication(), authService.SiswaAuthorization(), siswaHandler.GetSiswa)
 		SiswaRoute.POST("/", authService.Authentication(), authService.SiswaAuthorization(), siswaHandler.CreateSiswa)
 		SiswaRoute.POST("/upload-photo", authService.Authentication(), authService.SiswaAuthorization(), siswaHandler.UploadProfileImage)
 		SiswaRoute.POST("/update-profile", authService.Authentication(), authService.SiswaAuthorization(), siswaHandler.CreateOrUpdateSiswa)
@@ -86,7 +87,7 @@ func StartApp() {
 
 	AdminRoute := route.Group("/admin")
 	{
-
+		AdminRoute.GET("/", authService.Authentication(), authService.AdminAuthorization(), adminHandler.GetAdmin)
 		AdminRoute.POST("/", authService.Authentication(), authService.AdminAuthorization(), adminHandler.CreateAdmin)
 		AdminRoute.POST("/upload-photo", authService.Authentication(), authService.AdminAuthorization(), adminHandler.UploadProfileImage)
 		AdminRoute.POST("/update-profile", authService.Authentication(), authService.AdminAuthorization(), adminHandler.CreateOrUpdateAdmin)
@@ -94,6 +95,7 @@ func StartApp() {
 
 	PakarRoute := route.Group("/pakar")
 	{
+		PakarRoute.GET("/", authService.Authentication(), authService.PakarAuthorization(), pakarHandler.GetPakar)
 		PakarRoute.POST("/", authService.Authentication(), authService.PakarAuthorization(), pakarHandler.CreatePakar)
 		PakarRoute.POST("/upload-photo", authService.Authentication(), authService.PakarAuthorization(), pakarHandler.UploadProfileImage)
 		PakarRoute.POST("/update-profile", authService.Authentication(), authService.PakarAuthorization(), pakarHandler.CreateOrUpdatePakar)

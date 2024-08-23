@@ -18,6 +18,7 @@ type UserService interface {
 	GetAllUsersNotValidate(jenis_akun string) ([]dto.GetAllUsersResponse, errs.MessageErr)
 	UpdateUser(email string) (*dto.UpdateUserResponse, errs.MessageErr)
 	DeleteUser(user *entity.User) (*dto.DeleteUserResponse, errs.MessageErr)
+	GetAllDataUser(jenisAkun string) (interface{}, errs.MessageErr)
 }
 
 type userService struct {
@@ -288,4 +289,127 @@ func (u *userService) DeleteUser(user *entity.User) (*dto.DeleteUserResponse, er
 	}
 
 	return response, nil
+}
+
+func (s *userService) GetAllDataUser(jenisAkun string) (interface{}, errs.MessageErr) {
+	data, err := s.userRepo.GetAllDataUser(jenisAkun)
+	if err != nil {
+		return nil, err
+	}
+
+	allAdminPakarSiswa := make([]interface{}, 0)
+
+	switch jenisAkun {
+	case "1": // Admin and Pakar
+		adminPakarResponse := make([]dto.GetAdminPakarResponse, 0)
+		for _, adminPakar := range data.([]entity.Admin) {
+			response := dto.GetAdminPakarResponse{
+				Email:            adminPakar.Email,
+				NamaLengkap:      adminPakar.NamaLengkap,
+				Alamat:           adminPakar.Alamat,
+				NoTelepon:        adminPakar.NoTelepon,
+				FotoProfil:       adminPakar.FotoProfil,
+				JenisAkun:        adminPakar.User.JenisAkun,
+				RequestJenisAkun: adminPakar.User.RequestJenisAkun,
+			}
+			adminPakarResponse = append(adminPakarResponse, response)
+		}
+		return adminPakarResponse, nil
+
+	case "2": // Pakar
+		adminPakarResponse := make([]dto.GetAdminPakarResponse, 0)
+		for _, pakar := range data.([]entity.Pakar) {
+			response := dto.GetAdminPakarResponse{
+				Email:            pakar.Email,
+				NamaLengkap:      pakar.NamaLengkap,
+				Alamat:           pakar.Alamat,
+				NoTelepon:        pakar.NoTelepon,
+				FotoProfil:       pakar.FotoProfil,
+				JenisAkun:        pakar.User.JenisAkun,
+				RequestJenisAkun: pakar.User.RequestJenisAkun,
+			}
+			adminPakarResponse = append(adminPakarResponse, response)
+		}
+		return adminPakarResponse, nil
+
+	case "3": // Siswa
+		siswaResponse := make([]dto.GetSiswaResponse, 0)
+		for _, siswa := range data.([]entity.Siswa) {
+			response := dto.GetSiswaResponse{
+				Email:            siswa.Email,
+				NIS:              siswa.NIS,
+				NamaLengkap:      siswa.NamaLengkap,
+				TempatLahir:      siswa.TempatLahir,
+				TanggalLahir:     siswa.TanggalLahir,
+				Alamat:           siswa.Alamat,
+				NoTelepon:        siswa.NoTelepon,
+				Kelas:            siswa.Kelas,
+				Agama:            siswa.Agama,
+				FotoProfil:       siswa.FotoProfil,
+				JenisAkun:        siswa.User.JenisAkun,
+				RequestJenisAkun: siswa.User.RequestJenisAkun,
+			}
+			siswaResponse = append(siswaResponse, response)
+		}
+		return siswaResponse, nil
+
+	}
+
+	allAdmin := make([]dto.GetAdminPakarResponse, 0)
+
+	admin := data.(map[string]interface{})["admin"].([]entity.Admin)
+	for _, adminPakar := range admin {
+
+		response := dto.GetAdminPakarResponse{
+			Email:            adminPakar.Email,
+			NamaLengkap:      adminPakar.NamaLengkap,
+			Alamat:           adminPakar.Alamat,
+			NoTelepon:        adminPakar.NoTelepon,
+			FotoProfil:       adminPakar.FotoProfil,
+			JenisAkun:        adminPakar.User.JenisAkun,
+			RequestJenisAkun: adminPakar.User.RequestJenisAkun,
+		}
+		allAdmin = append(allAdmin, response)
+	}
+
+	allPakar := make([]dto.GetAdminPakarResponse, 0)
+
+	pakar := data.(map[string]interface{})["pakar"].([]entity.Pakar)
+	for _, pakar := range pakar {
+		response := dto.GetAdminPakarResponse{
+			Email:            pakar.Email,
+			NamaLengkap:      pakar.NamaLengkap,
+			Alamat:           pakar.Alamat,
+			NoTelepon:        pakar.NoTelepon,
+			FotoProfil:       pakar.FotoProfil,
+			JenisAkun:        pakar.User.JenisAkun,
+			RequestJenisAkun: pakar.User.RequestJenisAkun,
+		}
+		allPakar = append(allPakar, response)
+	}
+
+	allSiswa := make([]dto.GetSiswaResponse, 0)
+
+	siswa := data.(map[string]interface{})["siswa"].([]entity.Siswa)
+	for _, siswa := range siswa {
+		response := dto.GetSiswaResponse{
+			Email:            siswa.Email,
+			NIS:              siswa.NIS,
+			NamaLengkap:      siswa.NamaLengkap,
+			TempatLahir:      siswa.TempatLahir,
+			TanggalLahir:     siswa.TanggalLahir,
+			Alamat:           siswa.Alamat,
+			NoTelepon:        siswa.NoTelepon,
+			Kelas:            siswa.Kelas,
+			Agama:            siswa.Agama,
+			FotoProfil:       siswa.FotoProfil,
+			JenisAkun:        siswa.User.JenisAkun,
+			RequestJenisAkun: siswa.User.RequestJenisAkun,
+		}
+		allSiswa = append(allSiswa, response)
+	}
+
+	allAdminPakarSiswa = append(allAdminPakarSiswa, allAdmin, allPakar, allSiswa)
+
+	return allAdminPakarSiswa, nil
 }

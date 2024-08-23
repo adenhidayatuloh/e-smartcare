@@ -1,8 +1,10 @@
 package pkg
 
 import (
+	"context"
 	"esmartcare/pkg/errs"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -14,6 +16,11 @@ import (
 
 	"github.com/asaskevich/govalidator"
 	"github.com/gin-gonic/gin"
+
+	"github.com/cloudinary/cloudinary-go/v2"
+	"github.com/cloudinary/cloudinary-go/v2/api"
+	"github.com/cloudinary/cloudinary-go/v2/api/admin"
+	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 )
 
 func ValidateStruct(payload interface{}) errs.MessageErr {
@@ -89,7 +96,7 @@ func DeleteImage(filename string) errs.MessageErr {
 
 }
 
-func UploadImage(formFile string, editFileName string, ctx *gin.Context) (*string, errs.MessageErr) {
+func UploadImage(formFile string, key string, ctx *gin.Context) (*string, errs.MessageErr) {
 	// Handle file upload
 
 	file, err := ctx.FormFile(formFile)
@@ -113,19 +120,23 @@ func UploadImage(formFile string, editFileName string, ctx *gin.Context) (*strin
 		return nil, errs.NewBadRequest("Format file not suported, please upload only image type")
 
 	}
+	srcFile, _ := file.Open()
 
-	newFilename := fmt.Sprintf("%s%s", editFileName, extension)
-	newFilename = strings.ReplaceAll(newFilename, " ", "")
+	defer srcFile.Close()
 
-	// Save the file to the server with the new filename
-	if err := ctx.SaveUploadedFile(file, "./uploads/"+newFilename+"-temp"); err != nil {
+	cld, contextImg := Credentials()
+	//uploadImage(cld, ctx)
 
+	UploadImageCloud(cld, contextImg, srcFile, key)
+
+	imageURL, err := GetImageInfo(cld, contextImg, key)
+
+	if err != nil {
+		fmt.Println("error getting image info:", err)
 		return nil, errs.NewInternalServerError(err.Error())
 	}
 
-	finalRoutes := "/uploads/" + newFilename + "-temp"
-
-	return &finalRoutes, nil
+	return &imageURL, nil
 }
 
 // RenameImage renames the temporary uploaded image to the desired filename.
@@ -208,4 +219,60 @@ func UploadImagePemeriksaan(formFile string, editFileName string, ctx *gin.Conte
 	finalRoutes := "/uploads/pemeriksaan/" + newFilename + "-temp"
 
 	return &finalRoutes, nil
+}
+
+func Credentials() (*cloudinary.Cloudinary, context.Context) {
+	// Add your Cloudinary credentials, set configuration parameter
+	// Secure=true to return "https" URLs, and create a context
+	//===================
+	cld, _ := cloudinary.NewFromParams("dciv82xna", "843286689852972", "rBKo_sWQWaVO61GZfBfzutYl-zY")
+	cld.Config.URL.Secure = true
+	ctx := context.Background()
+	return cld, ctx
+}
+
+func UploadImageCloud(cld *cloudinary.Cloudinary, ctx context.Context, file interface{}, publicID string) {
+
+	// Upload the image.
+	// Set the asset's public ID and allow overwriting the asset with new versions
+	resp, err := cld.Upload.Upload(ctx, file, uploader.UploadParams{
+		PublicID:       publicID,
+		UniqueFilename: api.Bool(false),
+		Overwrite:      api.Bool(true)})
+	if err != nil {
+		fmt.Println("error")
+	}
+
+	// Log the delivery URL
+	fmt.Println("****2. Upload an image****\nDelivery URL:", resp.SecureURL, "\n")
+
+}
+
+func GetImageInfo(cld *cloudinary.Cloudinary, ctx context.Context, publicID string) (string, error) {
+	// Mendapatkan informasi tentang asset yang sudah di-upload
+	resp, err := cld.Admin.Asset(ctx, admin.AssetParams{PublicID: publicID})
+	if err != nil {
+		return "", err
+	}
+	return resp.SecureURL, nil
+}
+
+func DownloadImage(url string, filePath string) error {
+	// Membuka HTTP request untuk mengunduh gambar
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	// Membuat file lokal untuk menyimpan gambar
+	file, err := os.Create(filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	// Menulis konten dari respon HTTP ke file lokal
+	_, err = io.Copy(file, resp.Body)
+	return err
 }

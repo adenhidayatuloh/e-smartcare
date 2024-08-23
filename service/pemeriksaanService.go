@@ -6,7 +6,6 @@ import (
 	"esmartcare/pkg"
 	"esmartcare/pkg/errs"
 	PemeriksaanRepository "esmartcare/repository/pemeriksaanRepository"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -68,14 +67,16 @@ func (s *pemeriksaanService) DeletePemeriksaanByEmail(email string) error {
 // UpdateProfilPhoto implements PemeriksaanService.
 func (s *pemeriksaanService) UpdatePhotoPemeriksaan(email string, ctx *gin.Context) (*dto.CreateUpdatePemeriksaanRequest, errs.MessageErr) {
 
-	urlImageNew := ""
 	oldPemeriksaan, checkEmail := s.repo.GetPemeriksaanByEmail(email)
 
 	if checkEmail != nil {
 		return nil, errs.NewBadRequest("Please add email first")
 	}
 
-	urlImage, err := pkg.UploadImagePemeriksaan("foto_pemeriksaan", oldPemeriksaan.Email, ctx)
+	newKeyImage := oldPemeriksaan.Email + "-pemeriksaan"
+
+	urlImage, err := pkg.UploadImage("foto_pemeriksaan", newKeyImage, ctx)
+	// Di sini logic nya
 
 	if err != nil {
 		return nil, err
@@ -84,27 +85,10 @@ func (s *pemeriksaanService) UpdatePhotoPemeriksaan(email string, ctx *gin.Conte
 	if *urlImage == "" {
 		return nil, errs.NewBadRequest("Image not detected")
 	}
-
-	urlImageNew = strings.Replace(*urlImage, "-temp", "", -1)
-
-	if oldPemeriksaan.Foto != "" {
-		// Delete the old image only after the new image is uploaded successfully
-		errDeleteImage := pkg.DeleteImage(oldPemeriksaan.Foto)
-		if errDeleteImage != nil {
-			return nil, errDeleteImage
-		}
-	}
-
-	// Rename the new image from temporary to final name
-	err = pkg.RenameImage(*urlImage, urlImageNew)
-	if err != nil {
-		return nil, errs.NewInternalServerError("Error on upload image")
-	}
-
 	NewPemeriksaan := entity.Pemeriksaan{
 		Email: email,
 
-		Foto: urlImageNew,
+		Foto: *urlImage,
 	}
 
 	// Update the student record

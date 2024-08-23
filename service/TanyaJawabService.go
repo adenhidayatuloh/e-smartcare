@@ -3,6 +3,7 @@ package service
 import (
 	"esmartcare/dto"
 	"esmartcare/entity"
+	"esmartcare/pkg"
 	"fmt"
 	"log"
 	"strconv"
@@ -117,10 +118,32 @@ func (s *tanyaJawabService) GetSimillaryQuestion(newQuestion string) ([]string, 
 	}
 
 	// Buat atau buka indeks Bleve
-	//indexMapping := bleve.NewIndexMapping()
+	indexMapping := bleve.NewIndexMapping()
 	index, err := bleve.Open("faq.bleve")
 
-	if err != nil {
+	if err == bleve.ErrorIndexPathDoesNotExist {
+
+		faqsIndex, err := s.GetChatBotUpdate()
+
+		index, err = pkg.CreateIndex("faq.bleve", indexMapping)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// Hapus semua dokumen dari indeks sebelum pengindeksan ulang
+		if err := pkg.DeleteAllDocuments(index); err != nil {
+			log.Fatal(err)
+		}
+
+		// Indexing data
+		for i, faq := range faqsIndex {
+			err := index.Index(fmt.Sprintf("%d", i), faq)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+
+	} else if err != nil {
 		return nil, err
 	}
 
@@ -187,10 +210,32 @@ func (s *tanyaJawabService) GetChatQuestion(newQuestion string) (string, string,
 	}
 
 	// Buat atau buka indeks Bleve
-	//indexMapping := bleve.NewIndexMapping()
+	indexMapping := bleve.NewIndexMapping()
 	index, err := bleve.Open("faq.bleve")
 
-	if err != nil {
+	if err == bleve.ErrorIndexPathDoesNotExist {
+
+		faqsIndex, err := s.GetChatBotUpdate()
+
+		index, err = pkg.CreateIndex("faq.bleve", indexMapping)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// Hapus semua dokumen dari indeks sebelum pengindeksan ulang
+		if err := pkg.DeleteAllDocuments(index); err != nil {
+			log.Fatal(err)
+		}
+
+		// Indexing data
+		for i, faq := range faqsIndex {
+			err := index.Index(fmt.Sprintf("%d", i), faq)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+
+	} else if err != nil {
 		return "", "", err
 	}
 

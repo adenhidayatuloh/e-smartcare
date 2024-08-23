@@ -17,24 +17,40 @@ type SiswaService interface {
 	UpdateProfilPhoto(email string, ctx *gin.Context) (*dto.CreateSiswaResponse, errs.MessageErr)
 	CreateOrUpdateSiswa(email string, payload *dto.CreateSiswaRequest) (*dto.CreateSiswaResponse, errs.MessageErr)
 	GetAllSiswaWithPemeriksaan() ([]entity.Siswa_pemeriksaan, errs.MessageErr)
-
-	//Update(email string, payload *dto.CreateSiswaRequestAndResponse) (*dto.CreateSiswaRequestAndResponse, errs.MessageErr)
-	//UpdatePhoto(email string) (*dto.UpdatePhotoResponse, errs.MessageErr)
-	// Login(payload *dto.LoginRequest) (*dto.LoginResponse, errs.MessageErr)
-	// GetAllUsers(jenis_akun string) ([]dto.GetAllUsersResponse, errs.MessageErr)
-	// GetAllUsersNotValidate(jenis_akun string) ([]dto.GetAllUsersResponse, errs.MessageErr)
-	// UpdateUser(email string) (*dto.UpdateUserResponse, errs.MessageErr)
-	//DeleteUser(user *entity.User) (*dto.DeleteUserResponse, errs.MessageErr)
+	GetSiswa(email string) (*dto.CreateSiswaResponse, errs.MessageErr)
 }
 
 type siswaService struct {
 	siswaRepo siswarepository.SiswaRepository
 }
 
+// GetSiswa implements SiswaService.
+func (s *siswaService) GetSiswa(email string) (*dto.CreateSiswaResponse, errs.MessageErr) {
+	siswa, err := s.siswaRepo.GetSiswaByEmail(email)
+
+	if err != nil {
+		return nil, err
+	}
+
+	siswaDTO := dto.CreateSiswaResponse{
+		Email:        siswa.Email,
+		NIS:          siswa.NIS,
+		NamaLengkap:  siswa.NamaLengkap,
+		TempatLahir:  siswa.TempatLahir,
+		TanggalLahir: siswa.TanggalLahir,
+		Alamat:       siswa.Alamat,
+		NoTelepon:    siswa.NoTelepon,
+		Kelas:        siswa.Kelas,
+		Agama:        siswa.Agama,
+		FotoProfil:   siswa.FotoProfil,
+	}
+
+	return &siswaDTO, nil
+}
+
 // UpdateProfilPhoto implements SiswaService.
 func (s *siswaService) UpdateProfilPhoto(email string, ctx *gin.Context) (*dto.CreateSiswaResponse, errs.MessageErr) {
 
-	urlImageNew := ""
 	oldSiswa, checkEmail := s.siswaRepo.GetSiswaByEmail(email)
 
 	if checkEmail != nil {
@@ -42,6 +58,7 @@ func (s *siswaService) UpdateProfilPhoto(email string, ctx *gin.Context) (*dto.C
 	}
 
 	urlImage, err := pkg.UploadImage("foto_profil", oldSiswa.Email, ctx)
+	// Di sini logic nya
 
 	if err != nil {
 		return nil, err
@@ -51,26 +68,26 @@ func (s *siswaService) UpdateProfilPhoto(email string, ctx *gin.Context) (*dto.C
 		return nil, errs.NewBadRequest("Image not detected")
 	}
 
-	urlImageNew = strings.Replace(*urlImage, "-temp", "", -1)
+	// urlImageNew = strings.Replace(*urlImage, "-temp", "", -1)
 
-	if oldSiswa.FotoProfil != "" {
-		// Delete the old image only after the new image is uploaded successfully
-		errDeleteImage := pkg.DeleteImage(oldSiswa.FotoProfil)
-		if errDeleteImage != nil {
-			return nil, errDeleteImage
-		}
-	}
+	// if oldAdmin.FotoProfil != "" {
+	// 	// Delete the old image only after the new image is uploaded successfully
+	// 	errDeleteImage := pkg.DeleteImage(oldAdmin.FotoProfil)
+	// 	if errDeleteImage != nil {
+	// 		return nil, errDeleteImage
+	// 	}
+	// }
 
-	// Rename the new image from temporary to final name
-	err = pkg.RenameImage(*urlImage, urlImageNew)
-	if err != nil {
-		return nil, errs.NewInternalServerError("Error on upload image")
-	}
+	// // // Rename the new image from temporary to final name
+	// err = pkg.RenameImage(*urlImage, urlImageNew)
+	// if err != nil {
+	// 	return nil, errs.NewInternalServerError("Error on upload image")
+	// }
 
 	Newsiswa := entity.Siswa{
 		Email: email,
 
-		FotoProfil: urlImageNew,
+		FotoProfil: *urlImage,
 	}
 
 	// Update the student record

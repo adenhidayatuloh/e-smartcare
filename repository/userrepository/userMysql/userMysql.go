@@ -96,11 +96,6 @@ func (u *userMySql) GetAllUsersNotValidate(jenis_akun string) ([]entity.User, er
 		query = query.Where("jenis_akun != request_jenis_akun")
 	}
 
-	// if err := db.Where("JenisAkun != RequestJenisAkun").Find(&users).Error; err != nil {
-	//     c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-	//     return
-	// }
-
 	if err := query.Find(&users).Error; err != nil {
 		return nil, errs.NewNotFound("Users which not validate not found")
 
@@ -124,4 +119,56 @@ func (u *userMySql) DeleteUser(user *entity.User) errs.MessageErr {
 	}
 
 	return nil
+}
+
+func (u *userMySql) GetAllDataUser(jenis_akun string) (interface{}, errs.MessageErr) {
+	var result interface{}
+
+	switch jenis_akun {
+	case "1":
+		var allAdmin []entity.Admin
+		if err := u.db.Preload("User").Order("email ASC").Find(&allAdmin).Error; err != nil {
+			return nil, errs.NewNotFound("Admins not found")
+		}
+		result = allAdmin
+
+	case "2":
+		var allPakar []entity.Pakar
+		if err := u.db.Preload("User").Order("email ASC").Find(&allPakar).Error; err != nil {
+			return nil, errs.NewNotFound("Experts not found")
+		}
+		result = allPakar
+
+	case "3":
+		var allSiswa []entity.Siswa
+		if err := u.db.Preload("User").Order("email ASC").Find(&allSiswa).Error; err != nil {
+			return nil, errs.NewNotFound("Students not found")
+		}
+		result = allSiswa
+
+	default:
+		// Mengambil semua data Admin, Pakar, dan Siswa jika jenis_akun tidak diisi
+		var allAdmin []entity.Admin
+		if err := u.db.Preload("User").Order("email ASC").Find(&allAdmin).Error; err != nil {
+			return nil, errs.NewNotFound("Admins not found")
+		}
+
+		var allPakar []entity.Pakar
+		if err := u.db.Preload("User").Order("email ASC").Find(&allPakar).Error; err != nil {
+			return nil, errs.NewNotFound("Experts not found")
+		}
+
+		var allSiswa []entity.Siswa
+		if err := u.db.Preload("User").Order("email ASC").Find(&allSiswa).Error; err != nil {
+			return nil, errs.NewNotFound("Students not found")
+		}
+
+		result = map[string]interface{}{
+			"admin": allAdmin,
+			"pakar": allPakar,
+			"siswa": allSiswa,
+		}
+	}
+
+	return result, nil
 }

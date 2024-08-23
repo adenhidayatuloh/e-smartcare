@@ -16,31 +16,44 @@ type PakarService interface {
 	CreateOrUpdatePakarWithProfilPhoto(email string, payload *dto.CreatePakarRequest, ctx *gin.Context) (*dto.CreatePakarResponse, errs.MessageErr)
 	UpdateProfilPhoto(email string, ctx *gin.Context) (*dto.CreatePakarResponse, errs.MessageErr)
 	CreateOrUpdatePakar(email string, payload *dto.CreatePakarRequest) (*dto.CreatePakarResponse, errs.MessageErr)
-
-	//Update(email string, payload *dto.CreatePakarRequestAndResponse) (*dto.CreatePakarRequestAndResponse, errs.MessageErr)
-	//UpdatePhoto(email string) (*dto.UpdatePhotoResponse, errs.MessageErr)
-	// Login(payload *dto.LoginRequest) (*dto.LoginResponse, errs.MessageErr)
-	// GetAllUsers(jenis_akun string) ([]dto.GetAllUsersResponse, errs.MessageErr)
-	// GetAllUsersNotValidate(jenis_akun string) ([]dto.GetAllUsersResponse, errs.MessageErr)
-	// UpdateUser(email string) (*dto.UpdateUserResponse, errs.MessageErr)
-	//DeleteUser(user *entity.User) (*dto.DeleteUserResponse, errs.MessageErr)
+	GetPakar(email string) (*dto.CreatePakarResponse, errs.MessageErr)
 }
 
 type pakarService struct {
 	PakarRepo PakarRepository.PakarRepository
 }
 
+// GetPakar implements PakarService.
+func (s *pakarService) GetPakar(email string) (*dto.CreatePakarResponse, errs.MessageErr) {
+	pakar, err := s.PakarRepo.GetPakarByEmail(email)
+
+	if err != nil {
+		return nil, err
+	}
+	pakarResponse := &dto.CreatePakarResponse{
+		Email: pakar.Email,
+
+		NamaLengkap: pakar.NamaLengkap,
+
+		Alamat:    pakar.Alamat,
+		NoTelepon: pakar.NoTelepon,
+
+		FotoProfil: pakar.FotoProfil,
+	}
+
+	return pakarResponse, nil
+}
+
 // UpdateProfilPhoto implements pakarService.
 func (s *pakarService) UpdateProfilPhoto(email string, ctx *gin.Context) (*dto.CreatePakarResponse, errs.MessageErr) {
 
-	urlImageNew := ""
 	oldPakar, checkEmail := s.PakarRepo.GetPakarByEmail(email)
 
 	if checkEmail != nil {
 		return nil, errs.NewBadRequest("Please add email first")
 	}
-
 	urlImage, err := pkg.UploadImage("foto_profil", oldPakar.Email, ctx)
+	// Di sini logic nya
 
 	if err != nil {
 		return nil, err
@@ -50,26 +63,10 @@ func (s *pakarService) UpdateProfilPhoto(email string, ctx *gin.Context) (*dto.C
 		return nil, errs.NewBadRequest("Image not detected")
 	}
 
-	urlImageNew = strings.Replace(*urlImage, "-temp", "", -1)
-
-	if oldPakar.FotoProfil != "" {
-		// Delete the old image only after the new image is uploaded successfully
-		errDeleteImage := pkg.DeleteImage(oldPakar.FotoProfil)
-		if errDeleteImage != nil {
-			return nil, errDeleteImage
-		}
-	}
-
-	// Rename the new image from temporary to final name
-	err = pkg.RenameImage(*urlImage, urlImageNew)
-	if err != nil {
-		return nil, errs.NewInternalServerError("Error on upload image")
-	}
-
 	NewPakar := entity.Pakar{
 		Email: email,
 
-		FotoProfil: urlImageNew,
+		FotoProfil: *urlImage,
 	}
 
 	// Update the student record

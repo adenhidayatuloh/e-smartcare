@@ -109,3 +109,14 @@ func (u *UserHandler) DeleteUser(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, response)
 }
+
+func (u *UserHandler) GetAllDataUser(c *gin.Context) {
+	jenisAkun := c.Query("jenis-akun")
+	data, err := u.userService.GetAllDataUser(jenisAkun)
+	if err != nil {
+		c.JSON(err.StatusCode(), err)
+		return
+	}
+
+	c.JSON(http.StatusOK, data)
+}
