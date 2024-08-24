@@ -2,6 +2,7 @@ package tanyajawabmysql
 
 import (
 	"esmartcare/entity"
+	"esmartcare/pkg/errs"
 	"log"
 
 	TanyaJawabRepository "esmartcare/repository/tanyaJawabRepository"
@@ -69,16 +70,16 @@ func (r *tanyaJawabRepository) FindByID(id int) (entity.TanyaJawab, error) {
 	return tanyaJawab, nil
 }
 
-func (r *tanyaJawabRepository) Create(tanyaJawab entity.TanyaJawab) (entity.TanyaJawab, error) {
+func (r *tanyaJawabRepository) Create(tanyaJawab entity.TanyaJawab) (entity.TanyaJawab, errs.MessageErr) {
 	if err := r.db.Create(&tanyaJawab).Error; err != nil {
-		return entity.TanyaJawab{}, err
+		return entity.TanyaJawab{}, errs.NewBadRequest(err.Error())
 	}
 	return tanyaJawab, nil
 }
 
-func (r *tanyaJawabRepository) Update(tanyaJawab entity.TanyaJawab) (entity.TanyaJawab, error) {
+func (r *tanyaJawabRepository) Update(tanyaJawab entity.TanyaJawab) (entity.TanyaJawab, errs.MessageErr) {
 	if err := r.db.Save(&tanyaJawab).Error; err != nil {
-		return entity.TanyaJawab{}, err
+		return entity.TanyaJawab{}, errs.NewBadRequest(err.Error())
 	}
 	return tanyaJawab, nil
 }

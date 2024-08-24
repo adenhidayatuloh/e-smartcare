@@ -4,6 +4,7 @@ import (
 	"esmartcare/dto"
 	"esmartcare/entity"
 	"esmartcare/pkg"
+	"esmartcare/pkg/errs"
 	"fmt"
 	"log"
 	"strconv"
@@ -17,8 +18,8 @@ type TanyaJawabService interface {
 	GetAllTanyaJawab() ([]entity.TanyaJawab, error)
 	GetTanyaJawabByValidationStatus(isValidated bool) ([]entity.TanyaJawab, error)
 	GetTanyaJawabByID(id int) (entity.TanyaJawab, error)
-	CreateTanyaJawab(request dto.CreateUpdateTanyaJawabRequest) (entity.TanyaJawab, error)
-	UpdateTanyaJawab(id int, request dto.CreateUpdateTanyaJawabRequest) (entity.TanyaJawab, error)
+	CreateTanyaJawab(request dto.CreateUpdateTanyaJawabRequest) (entity.TanyaJawab, errs.MessageErr)
+	UpdateTanyaJawab(id int, request *dto.CreateUpdateTanyaJawabRequest) (entity.TanyaJawab, errs.MessageErr)
 	UpdateValidator(id int, validator string) (entity.TanyaJawab, error)
 	DeleteTanyaJawab(id int) error
 	GetSimillaryQuestion(newQuestion string) ([]string, error)
@@ -51,7 +52,7 @@ func (s *tanyaJawabService) GetTanyaJawabByID(id int) (entity.TanyaJawab, error)
 	return s.repo.FindByID(id)
 }
 
-func (s *tanyaJawabService) CreateTanyaJawab(request dto.CreateUpdateTanyaJawabRequest) (entity.TanyaJawab, error) {
+func (s *tanyaJawabService) CreateTanyaJawab(request dto.CreateUpdateTanyaJawabRequest) (entity.TanyaJawab, errs.MessageErr) {
 
 	err := pkg.ValidateStruct(request)
 
@@ -65,16 +66,16 @@ func (s *tanyaJawabService) CreateTanyaJawab(request dto.CreateUpdateTanyaJawabR
 	return s.repo.Create(tanyaJawab)
 }
 
-func (s *tanyaJawabService) UpdateTanyaJawab(id int, request dto.CreateUpdateTanyaJawabRequest) (entity.TanyaJawab, error) {
+func (s *tanyaJawabService) UpdateTanyaJawab(id int, request *dto.CreateUpdateTanyaJawabRequest) (entity.TanyaJawab, errs.MessageErr) {
 	tanyaJawab, err := s.repo.FindByID(id)
 	if err != nil {
-		return entity.TanyaJawab{}, err
+		return entity.TanyaJawab{}, errs.NewNotFound(err.Error())
 	}
 
-	err = pkg.ValidateStruct(request)
+	err2 := pkg.ValidateStruct(request)
 
-	if err != nil {
-		return entity.TanyaJawab{}, err
+	if err2 != nil {
+		return entity.TanyaJawab{}, err2
 	}
 
 	tanyaJawab.Pertanyaan = request.Pertanyaan

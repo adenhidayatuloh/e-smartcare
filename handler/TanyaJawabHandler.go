@@ -54,7 +54,7 @@ func (h *TanyaJawabHandler) CreateTanyaJawab(ctx *gin.Context) {
 
 	tanyaJawab, err := h.service.CreateTanyaJawab(request)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(err.StatusCode(), err)
 		return
 	}
 
@@ -70,13 +70,13 @@ func (h *TanyaJawabHandler) UpdateTanyaJawab(ctx *gin.Context) {
 
 	var request dto.CreateUpdateTanyaJawabRequest
 	if err := ctx.ShouldBindJSON(&request); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
 		return
 	}
 
-	tanyaJawab, err := h.service.UpdateTanyaJawab(id, request)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	tanyaJawab, err2 := h.service.UpdateTanyaJawab(id, &request)
+	if err2 != nil {
+		ctx.JSON(err2.StatusCode(), err2)
 		return
 	}
 
