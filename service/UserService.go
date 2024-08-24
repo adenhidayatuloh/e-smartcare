@@ -274,9 +274,9 @@ func (u *userService) DeleteUser(user *entity.User) (*dto.DeleteUserResponse, er
 
 	if dataDeleted[idxUser].FotoProfil != "" {
 		// Delete the old image only after the new image is uploaded successfully
-		errDeleteImage := pkg.DeleteImage(dataDeleted[idxUser].FotoProfil)
+		errDeleteImage := pkg.DeleteImage(dataDeleted[idxUser].Email)
 		if errDeleteImage != nil {
-			return nil, errDeleteImage
+			return nil, err
 		}
 	}
 
@@ -302,6 +302,8 @@ func (s *userService) GetAllDataUser(jenisAkun string) (interface{}, errs.Messag
 	switch jenisAkun {
 	case "1": // Admin and Pakar
 		adminPakarResponse := make([]dto.GetAdminPakarResponse, 0)
+
+		fmt.Print(data.([]entity.Admin))
 		for _, adminPakar := range data.([]entity.Admin) {
 			response := dto.GetAdminPakarResponse{
 				Email:            adminPakar.Email,

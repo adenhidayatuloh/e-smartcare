@@ -80,7 +80,6 @@ func StartApp() {
 	SiswaRoute := route.Group("/siswa")
 	{
 		SiswaRoute.GET("/", authService.Authentication(), authService.SiswaAuthorization(), siswaHandler.GetSiswa)
-		SiswaRoute.POST("/", authService.Authentication(), authService.SiswaAuthorization(), siswaHandler.CreateSiswa)
 		SiswaRoute.POST("/upload-photo", authService.Authentication(), authService.SiswaAuthorization(), siswaHandler.UploadProfileImage)
 		SiswaRoute.POST("/update-profile", authService.Authentication(), authService.SiswaAuthorization(), siswaHandler.CreateOrUpdateSiswa)
 	}
@@ -88,7 +87,6 @@ func StartApp() {
 	AdminRoute := route.Group("/admin")
 	{
 		AdminRoute.GET("/", authService.Authentication(), authService.AdminAuthorization(), adminHandler.GetAdmin)
-		AdminRoute.POST("/", authService.Authentication(), authService.AdminAuthorization(), adminHandler.CreateAdmin)
 		AdminRoute.POST("/upload-photo", authService.Authentication(), authService.AdminAuthorization(), adminHandler.UploadProfileImage)
 		AdminRoute.POST("/update-profile", authService.Authentication(), authService.AdminAuthorization(), adminHandler.CreateOrUpdateAdmin)
 	}
@@ -96,7 +94,6 @@ func StartApp() {
 	PakarRoute := route.Group("/pakar")
 	{
 		PakarRoute.GET("/", authService.Authentication(), authService.PakarAuthorization(), pakarHandler.GetPakar)
-		PakarRoute.POST("/", authService.Authentication(), authService.PakarAuthorization(), pakarHandler.CreatePakar)
 		PakarRoute.POST("/upload-photo", authService.Authentication(), authService.PakarAuthorization(), pakarHandler.UploadProfileImage)
 		PakarRoute.POST("/update-profile", authService.Authentication(), authService.PakarAuthorization(), pakarHandler.CreateOrUpdatePakar)
 	}

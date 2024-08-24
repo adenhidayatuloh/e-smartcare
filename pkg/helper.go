@@ -79,21 +79,18 @@ func init() {
 	govalidator.CustomTypeTagMap.Set("statusAlarm", govalidator.CustomTypeValidator(ValidateStatusAlarm))
 }
 
-func DeleteImage(filename string) errs.MessageErr {
+func DeleteImage(publicID string) errs.MessageErr {
 
-	filepath := "." + filename
+	cld, contextImg := Credentials()
+	// Menghapus gambar dari Cloudinary
+	_, err := cld.Admin.DeleteAssetsByPrefix(contextImg, admin.DeleteAssetsByPrefixParams{
+		Prefix: []string{publicID}})
 
-	if err := os.Remove(filepath); err != nil {
-		if os.IsNotExist(err) {
-			return errs.NewNotFound("Error : file not found ")
-		} else {
-			return errs.NewInternalServerError("Error : file cannot delete ")
-		}
-
+	if err != nil {
+		return errs.NewInternalServerError(err.Error())
 	}
 
 	return nil
-
 }
 
 func UploadImage(formFile string, key string, ctx *gin.Context) (*string, errs.MessageErr) {
@@ -235,16 +232,13 @@ func UploadImageCloud(cld *cloudinary.Cloudinary, ctx context.Context, file inte
 
 	// Upload the image.
 	// Set the asset's public ID and allow overwriting the asset with new versions
-	resp, err := cld.Upload.Upload(ctx, file, uploader.UploadParams{
+	_, err := cld.Upload.Upload(ctx, file, uploader.UploadParams{
 		PublicID:       publicID,
 		UniqueFilename: api.Bool(false),
 		Overwrite:      api.Bool(true)})
 	if err != nil {
 		fmt.Println("error")
 	}
-
-	// Log the delivery URL
-	fmt.Println("****2. Upload an image****\nDelivery URL:", resp.SecureURL, "\n")
 
 }
 

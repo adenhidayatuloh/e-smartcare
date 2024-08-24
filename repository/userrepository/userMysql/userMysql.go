@@ -20,8 +20,8 @@ func (u *userMySql) GetUserJoin(joinTable string) ([]entity.ResultsJoinUsers, er
 	var results []entity.ResultsJoinUsers
 
 	err := u.db.Model(&entity.User{}).
-		Select("user.email, " + joinTable + ".foto_profil").
-		Joins("left join " + joinTable + " on " + joinTable + ".email = user.email").
+		Select("users.email, " + joinTable + ".foto_profil").
+		Joins("left join " + joinTable + " on " + joinTable + ".email = users.email").
 		Scan(&results).Error
 
 	if err != nil {
@@ -130,12 +130,14 @@ func (u *userMySql) GetAllDataUser(jenis_akun string) (interface{}, errs.Message
 		if err := u.db.Preload("User").Order("email ASC").Find(&allAdmin).Error; err != nil {
 			return nil, errs.NewNotFound("Admins not found")
 		}
+
+		fmt.Println(allAdmin)
 		result = allAdmin
 
 	case "2":
 		var allPakar []entity.Pakar
 		if err := u.db.Preload("User").Order("email ASC").Find(&allPakar).Error; err != nil {
-			return nil, errs.NewNotFound("Experts not found")
+			return nil, errs.NewNotFound("pakar not found")
 		}
 		result = allPakar
 

@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"encoding/json"
 	"esmartcare/dto"
 	"esmartcare/entity"
 	"esmartcare/pkg/errs"
@@ -17,35 +16,6 @@ type AdminHandler struct {
 
 func NewAdminHandler(AdminService service.AdminService) *AdminHandler {
 	return &AdminHandler{AdminService}
-}
-
-func (s *AdminHandler) CreateAdmin(ctx *gin.Context) {
-	var requestBody dto.CreateAdminRequest
-
-	userData, ok := ctx.MustGet("userData").(*entity.User)
-
-	if !ok {
-		newError := errs.NewBadRequest("Failed to get user data")
-		ctx.JSON(newError.StatusCode(), newError)
-		return
-	}
-
-	// Retrieve JSON part from form-data
-	jsonData := ctx.PostForm("Admin")
-	if jsonData != "" {
-		if err := json.Unmarshal([]byte(jsonData), &requestBody); err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-	}
-
-	registeredUser, err2 := s.AdminService.CreateOrUpdateAdminWithProfilPhoto(userData.Email, &requestBody, ctx)
-	if err2 != nil {
-		ctx.JSON(err2.StatusCode(), err2)
-		return
-	}
-
-	ctx.JSON(http.StatusCreated, registeredUser)
 }
 
 func (s *AdminHandler) UploadProfileImage(ctx *gin.Context) {
