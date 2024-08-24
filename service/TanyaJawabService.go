@@ -52,6 +52,12 @@ func (s *tanyaJawabService) GetTanyaJawabByID(id int) (entity.TanyaJawab, error)
 }
 
 func (s *tanyaJawabService) CreateTanyaJawab(request dto.CreateUpdateTanyaJawabRequest) (entity.TanyaJawab, error) {
+
+	err := pkg.ValidateStruct(request)
+
+	if err != nil {
+		return entity.TanyaJawab{}, err
+	}
 	tanyaJawab := entity.TanyaJawab{
 		Pertanyaan: request.Pertanyaan,
 		Jawaban:    request.Jawaban,
@@ -61,6 +67,12 @@ func (s *tanyaJawabService) CreateTanyaJawab(request dto.CreateUpdateTanyaJawabR
 
 func (s *tanyaJawabService) UpdateTanyaJawab(id int, request dto.CreateUpdateTanyaJawabRequest) (entity.TanyaJawab, error) {
 	tanyaJawab, err := s.repo.FindByID(id)
+	if err != nil {
+		return entity.TanyaJawab{}, err
+	}
+
+	err = pkg.ValidateStruct(request)
+
 	if err != nil {
 		return entity.TanyaJawab{}, err
 	}

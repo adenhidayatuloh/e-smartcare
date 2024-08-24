@@ -1,8 +1,8 @@
 package dto
 
 type CreateUpdateTanyaJawabRequest struct {
-	Pertanyaan string `json:"pertanyaan"`
-	Jawaban    string `json:"jawaban"`
+	Pertanyaan string `json:"pertanyaan" valid:"required~Pertanyaan cannot be empty "`
+	Jawaban    string `json:"jawaban" valid:"required~Jawaban cannot be empty"`
 	Validator  string
 }
 
