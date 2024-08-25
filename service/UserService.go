@@ -8,6 +8,9 @@ import (
 	"fmt"
 	"strconv"
 
+	adminrepository "esmartcare/repository/adminRepository"
+	pakarrepository "esmartcare/repository/pakarRepository"
+	siswarepository "esmartcare/repository/siswaRepository"
 	"esmartcare/repository/userrepository"
 )
 
@@ -18,15 +21,23 @@ type UserService interface {
 	GetAllUsersNotValidate(jenis_akun string) ([]dto.GetAllUsersResponse, errs.MessageErr)
 	UpdateUser(email string) (*dto.UpdateUserResponse, errs.MessageErr)
 	DeleteUser(user *entity.User) (*dto.DeleteUserResponse, errs.MessageErr)
-	GetAllDataUser(jenisAkun string) (interface{}, errs.MessageErr)
+	GetAllDataUser(jenisAkun string, isValidated string) (interface{}, errs.MessageErr)
 }
 
 type userService struct {
-	userRepo userrepository.UserRepository
+	userRepo  userrepository.UserRepository
+	adminRepo adminrepository.AdminRepository
+	siswaRepo siswarepository.SiswaRepository
+	pakarRepo pakarrepository.PakarRepository
 }
 
-func NewUserService(userRepo userrepository.UserRepository) UserService {
-	return &userService{userRepo}
+func NewUserService(userRepo userrepository.UserRepository, adminRepo adminrepository.AdminRepository, siswaRepo siswarepository.SiswaRepository, pakarRepo pakarrepository.PakarRepository) UserService {
+	return &userService{
+		userRepo:  userRepo,
+		adminRepo: adminRepo,
+		siswaRepo: siswaRepo,
+		pakarRepo: pakarRepo,
+	}
 }
 
 func (u *userService) Register(payload *dto.RegisterRequest) (*dto.RegisterResponse, errs.MessageErr) {
@@ -38,6 +49,9 @@ func (u *userService) Register(payload *dto.RegisterRequest) (*dto.RegisterRespo
 	}
 
 	user := entity.User{}
+	siswa := entity.Siswa{}
+	admin := entity.Admin{}
+	pakar := entity.Pakar{}
 
 	if payload.JenisAkun == "siswa" {
 		user = entity.User{
@@ -47,12 +61,24 @@ func (u *userService) Register(payload *dto.RegisterRequest) (*dto.RegisterRespo
 			JenisAkun:        "3",
 			RequestJenisAkun: "3",
 		}
+
+		siswa = entity.Siswa{
+			Email:       payload.Email,
+			NamaLengkap: payload.Nama,
+			NoTelepon:   payload.NomorTelepon,
+		}
+
 	} else if payload.JenisAkun == "admin" {
 		user = entity.User{
 
 			Email:            payload.Email,
 			Password:         payload.Password,
 			RequestJenisAkun: "1",
+		}
+		admin = entity.Admin{
+			Email:       payload.Email,
+			NamaLengkap: payload.Nama,
+			NoTelepon:   payload.NomorTelepon,
 		}
 
 	} else if payload.JenisAkun == "pakar" {
@@ -61,6 +87,12 @@ func (u *userService) Register(payload *dto.RegisterRequest) (*dto.RegisterRespo
 			Email:            payload.Email,
 			Password:         payload.Password,
 			RequestJenisAkun: "2",
+		}
+
+		pakar = entity.Pakar{
+			Email:       payload.Email,
+			NamaLengkap: payload.Nama,
+			NoTelepon:   payload.NomorTelepon,
 		}
 
 	}
@@ -78,6 +110,26 @@ func (u *userService) Register(payload *dto.RegisterRequest) (*dto.RegisterRespo
 	registeredUser, err := u.userRepo.Register(&user)
 	if err != nil {
 		return nil, err
+	}
+
+	switch payload.JenisAkun {
+	case "siswa":
+		_, err := u.siswaRepo.CreateSiswa(&siswa)
+		if err != nil {
+			return nil, err
+		}
+	case "pakar":
+		_, err := u.pakarRepo.CreatePakar(&pakar)
+		if err != nil {
+			return nil, err
+		}
+
+	case "admin":
+		_, err := u.adminRepo.CreateAdmin(&admin)
+		if err != nil {
+			return nil, err
+		}
+
 	}
 
 	response := &dto.RegisterResponse{
@@ -291,8 +343,8 @@ func (u *userService) DeleteUser(user *entity.User) (*dto.DeleteUserResponse, er
 	return response, nil
 }
 
-func (s *userService) GetAllDataUser(jenisAkun string) (interface{}, errs.MessageErr) {
-	data, err := s.userRepo.GetAllDataUser(jenisAkun)
+func (s *userService) GetAllDataUser(jenisAkun string, isValidated string) (interface{}, errs.MessageErr) {
+	data, err := s.userRepo.GetAllDataUser(jenisAkun, isValidated)
 	if err != nil {
 		return nil, err
 	}
@@ -357,8 +409,6 @@ func (s *userService) GetAllDataUser(jenisAkun string) (interface{}, errs.Messag
 
 	}
 
-	allAdmin := make([]dto.GetAdminPakarResponse, 0)
-
 	admin := data.(map[string]interface{})["admin"].([]entity.Admin)
 	for _, adminPakar := range admin {
 
@@ -371,10 +421,8 @@ func (s *userService) GetAllDataUser(jenisAkun string) (interface{}, errs.Messag
 			JenisAkun:        adminPakar.User.JenisAkun,
 			RequestJenisAkun: adminPakar.User.RequestJenisAkun,
 		}
-		allAdmin = append(allAdmin, response)
+		allAdminPakarSiswa = append(allAdminPakarSiswa, response)
 	}
-
-	allPakar := make([]dto.GetAdminPakarResponse, 0)
 
 	pakar := data.(map[string]interface{})["pakar"].([]entity.Pakar)
 	for _, pakar := range pakar {
@@ -387,10 +435,8 @@ func (s *userService) GetAllDataUser(jenisAkun string) (interface{}, errs.Messag
 			JenisAkun:        pakar.User.JenisAkun,
 			RequestJenisAkun: pakar.User.RequestJenisAkun,
 		}
-		allPakar = append(allPakar, response)
+		allAdminPakarSiswa = append(allAdminPakarSiswa, response)
 	}
-
-	allSiswa := make([]dto.GetSiswaResponse, 0)
 
 	siswa := data.(map[string]interface{})["siswa"].([]entity.Siswa)
 	for _, siswa := range siswa {
@@ -408,10 +454,8 @@ func (s *userService) GetAllDataUser(jenisAkun string) (interface{}, errs.Messag
 			JenisAkun:        siswa.User.JenisAkun,
 			RequestJenisAkun: siswa.User.RequestJenisAkun,
 		}
-		allSiswa = append(allSiswa, response)
+		allAdminPakarSiswa = append(allAdminPakarSiswa, response)
 	}
-
-	allAdminPakarSiswa = append(allAdminPakarSiswa, allAdmin, allPakar, allSiswa)
 
 	return allAdminPakarSiswa, nil
 }

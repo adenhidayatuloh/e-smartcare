@@ -1,9 +1,11 @@
 package dto
 
 type RegisterRequest struct {
-	Email     string `json:"email" valid:"required~Email cannot be empty,email~Invalid email format"`
-	Password  string `json:"password" valid:"required~Password cannot be empty,minstringlength(6)~password min 6 length"`
-	JenisAkun string `json:"jenis_akun" valid:"required~Jenis akun cannot be empty,jenisAkunValidator~Jenis akun hanya siswa admin pakar"`
+	Email        string `json:"email" valid:"required~Email cannot be empty,email~Invalid email format"`
+	Password     string `json:"password" valid:"required~Password cannot be empty,minstringlength(6)~password min 6 length"`
+	JenisAkun    string `json:"jenis_akun" valid:"required~Jenis akun cannot be empty,jenisAkunValidator~Jenis akun hanya siswa admin pakar"`
+	Nama         string `json:"nama" valid:"required~nama cannot be empty"`
+	NomorTelepon string `json:"telepon" valid:"required~telepon cannot be empty"`
 }
 
 type RegisterResponse struct {

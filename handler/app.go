@@ -37,7 +37,7 @@ func StartApp() {
 
 	authService := service.NewAuthService(userRepo, siswaRepo, riwayatTanyaJawabRepo)
 
-	userService := service.NewUserService(userRepo)
+	userService := service.NewUserService(userRepo, adminRepo, siswaRepo, pakarRepo)
 	userHandler := NewUserHandler(userService)
 
 	siswaService := service.NewSiswaService(siswaRepo)

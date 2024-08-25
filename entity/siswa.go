@@ -5,7 +5,7 @@ type Siswa struct {
 	NIS          string
 	NamaLengkap  string
 	TempatLahir  string
-	TanggalLahir string
+	TanggalLahir string `gorm:"default:NULL"`
 	Alamat       string
 	NoTelepon    string
 	Kelas        string

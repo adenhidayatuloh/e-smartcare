@@ -15,5 +15,5 @@ type UserRepository interface {
 	DeleteUser(user *entity.User) errs.MessageErr
 
 	GetUserJoin(joinTable string) ([]entity.ResultsJoinUsers, errs.MessageErr)
-	GetAllDataUser(jenis_akun string) (interface{}, errs.MessageErr)
+	GetAllDataUser(jenis_akun string, isValidated string) (interface{}, errs.MessageErr)
 }

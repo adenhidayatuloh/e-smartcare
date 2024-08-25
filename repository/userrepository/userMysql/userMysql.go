@@ -121,48 +121,99 @@ func (u *userMySql) DeleteUser(user *entity.User) errs.MessageErr {
 	return nil
 }
 
-func (u *userMySql) GetAllDataUser(jenis_akun string) (interface{}, errs.MessageErr) {
+func (u *userMySql) GetAllDataUser(jenis_akun string, isValidated string) (interface{}, errs.MessageErr) {
 	var result interface{}
 
 	switch jenis_akun {
 	case "1":
 		var allAdmin []entity.Admin
-		if err := u.db.Preload("User").Order("email ASC").Find(&allAdmin).Error; err != nil {
+
+		query := u.db.Preload("User").Joins("JOIN users ON users.email = admin.email")
+
+		switch isValidated {
+		case "true":
+			query = query.Where("users.jenis_akun != ''")
+		case "false":
+			query = query.Where("users.jenis_akun = ''")
+		default:
+			query = u.db.Preload("User")
+		}
+
+		if err := query.Order("admin.email ASC").Find(&allAdmin).Error; err != nil {
 			return nil, errs.NewNotFound("Admins not found")
 		}
 
-		fmt.Println(allAdmin)
 		result = allAdmin
 
 	case "2":
 		var allPakar []entity.Pakar
-		if err := u.db.Preload("User").Order("email ASC").Find(&allPakar).Error; err != nil {
-			return nil, errs.NewNotFound("pakar not found")
+
+		query := u.db.Preload("User").Joins("JOIN users ON users.email = pakar.email")
+
+		switch isValidated {
+		case "true":
+			query = query.Where("users.jenis_akun != ''")
+		case "false":
+			query = query.Where("users.jenis_akun = ''")
+		default:
+			query = u.db.Preload("User")
 		}
+
+		if err := query.Order("pakar.email ASC").Find(&allPakar).Error; err != nil {
+			return nil, errs.NewNotFound("Pakar not found")
+		}
+
 		result = allPakar
 
 	case "3":
 		var allSiswa []entity.Siswa
-		if err := u.db.Preload("User").Order("email ASC").Find(&allSiswa).Error; err != nil {
-			return nil, errs.NewNotFound("Students not found")
+		query := u.db.Preload("User").Joins("JOIN users ON users.email = siswa.email")
+
+		switch isValidated {
+		case "true":
+			query = query.Where("users.jenis_akun != ''")
+		case "false":
+			query = query.Where("users.jenis_akun = ''")
+		default:
+			query = u.db.Preload("User")
 		}
+
+		if err := query.Order("siswa.email ASC").Find(&allSiswa).Error; err != nil {
+			return nil, errs.NewNotFound("Siswa not found")
+		}
+
 		result = allSiswa
 
 	default:
-		// Mengambil semua data Admin, Pakar, dan Siswa jika jenis_akun tidak diisi
 		var allAdmin []entity.Admin
-		if err := u.db.Preload("User").Order("email ASC").Find(&allAdmin).Error; err != nil {
+		var allPakar []entity.Pakar
+		var allSiswa []entity.Siswa
+
+		queryAdmin := u.db.Preload("User").Joins("JOIN users ON users.email = admin.email")
+		queryPakar := u.db.Preload("User").Joins("JOIN users ON users.email = pakar.email")
+		querySiswa := u.db.Preload("User").Joins("JOIN users ON users.email = siswa.email")
+
+		switch isValidated {
+		case "true":
+			queryAdmin = queryAdmin.Where("users.jenis_akun != ''")
+			queryPakar = queryPakar.Where("users.jenis_akun != ''")
+			querySiswa = querySiswa.Where("users.jenis_akun != ''")
+		case "false":
+			queryAdmin = queryAdmin.Where("users.jenis_akun = ''")
+			queryPakar = queryPakar.Where("users.jenis_akun = ''")
+			querySiswa = querySiswa.Where("users.jenis_akun = ''")
+		}
+
+		if err := queryAdmin.Order("admin.email ASC").Find(&allAdmin).Error; err != nil {
 			return nil, errs.NewNotFound("Admins not found")
 		}
 
-		var allPakar []entity.Pakar
-		if err := u.db.Preload("User").Order("email ASC").Find(&allPakar).Error; err != nil {
-			return nil, errs.NewNotFound("Experts not found")
+		if err := queryPakar.Order("pakar.email ASC").Find(&allPakar).Error; err != nil {
+			return nil, errs.NewNotFound("Pakar not found")
 		}
 
-		var allSiswa []entity.Siswa
-		if err := u.db.Preload("User").Order("email ASC").Find(&allSiswa).Error; err != nil {
-			return nil, errs.NewNotFound("Students not found")
+		if err := querySiswa.Order("siswa.email ASC").Find(&allSiswa).Error; err != nil {
+			return nil, errs.NewNotFound("Siswa not found")
 		}
 
 		result = map[string]interface{}{
@@ -173,4 +224,5 @@ func (u *userMySql) GetAllDataUser(jenis_akun string) (interface{}, errs.Message
 	}
 
 	return result, nil
+
 }
