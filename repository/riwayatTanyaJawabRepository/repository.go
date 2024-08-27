@@ -9,4 +9,6 @@ type RiwayatTanyaJawabRepository interface {
 	Create(riwayat entity.RiwayatTanyaJawab) (entity.RiwayatTanyaJawab, error)
 	DeleteById(id uint) error
 	FindById(id uint) (*entity.RiwayatTanyaJawab, error)
+	DeleteByEmail(email string) error
+	GetAllDataRiwayat() ([]entity.RiwayatTanyaJawab, error)
 }

@@ -37,6 +37,18 @@ func (h *RiwayatTanyaJawabHandler) GetRiwayatByEmail(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, riwayat)
 }
 
+func (h *RiwayatTanyaJawabHandler) GetAllDataRiwayat(ctx *gin.Context) {
+
+	riwayat, err := h.service.GetAllDataRiwayat()
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, riwayat)
+}
+
 func (h *RiwayatTanyaJawabHandler) CreateRiwayat(ctx *gin.Context) {
 	var request dto.CreateUpdateRiwayatTanyaJawabRequest
 	if err := ctx.ShouldBindJSON(&request); err != nil {
@@ -84,4 +96,33 @@ func (h *RiwayatTanyaJawabHandler) DeleteRiwayatById(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{"message": "Record deleted"})
+}
+
+func (h *RiwayatTanyaJawabHandler) DeleteRiwayatByEmail(ctx *gin.Context) {
+	emailParam := ctx.Param("email")
+
+	if err := h.service.DeleteRiwayatByEmail(emailParam); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "Record with email " + emailParam + " deleted"})
+}
+
+func (h *RiwayatTanyaJawabHandler) DeleteAllRiwayatByUserLogin(ctx *gin.Context) {
+
+	userData, ok := ctx.MustGet("userData").(*entity.User)
+
+	if !ok {
+		newError := errs.NewBadRequest("Failed to get user data")
+		ctx.JSON(newError.StatusCode(), newError)
+		return
+	}
+
+	if err := h.service.DeleteRiwayatByEmail(userData.Email); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "Record with email " + userData.Email + " deleted"})
 }

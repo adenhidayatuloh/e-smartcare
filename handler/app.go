@@ -117,8 +117,11 @@ func StartApp() {
 	{
 
 		RiwayatRoute.GET("/", authService.Authentication(), riwayatTanyaJawabHandler.GetRiwayatByEmail)
+		RiwayatRoute.GET("/all-riwayat", authService.Authentication(), authService.AdminAndPakarAuthorization(), riwayatTanyaJawabHandler.GetAllDataRiwayat)
 		RiwayatRoute.POST("/", authService.Authentication(), riwayatTanyaJawabHandler.CreateRiwayat)
 		RiwayatRoute.DELETE("/:id", authService.Authentication(), authService.RiwayatAuthorization(), riwayatTanyaJawabHandler.DeleteRiwayatById)
+		RiwayatRoute.DELETE("/delete-email/:email", authService.Authentication(), authService.AdminAndPakarAuthorization(), riwayatTanyaJawabHandler.DeleteRiwayatByEmail)
+		RiwayatRoute.DELETE("/delete-all", authService.Authentication(), riwayatTanyaJawabHandler.DeleteAllRiwayatByUserLogin)
 
 	}
 
