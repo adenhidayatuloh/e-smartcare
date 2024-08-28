@@ -98,14 +98,6 @@ func (h *TanyaJawabHandler) UpdateValidator(ctx *gin.Context) {
 		return
 	}
 
-	// var request struct {
-	// 	Validator string `json:"validator"`
-	// }
-	// if err := ctx.ShouldBindJSON(&request); err != nil {
-	// 	ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	// 	return
-	// }
-
 	tanyaJawab, err := h.service.UpdateValidator(id, userData.Email)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

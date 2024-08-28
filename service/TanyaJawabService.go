@@ -166,14 +166,14 @@ func (s *tanyaJawabService) GetSimillaryQuestion(newQuestion string) ([]string, 
 	questionQuery.SetField("Question")
 
 	// Query untuk mencocokkan topik
-	topicQuery := bleve.NewMatchQuery(newQuestion)
-	topicQuery.SetField("Topic")
+	// topicQuery := bleve.NewMatchQuery(newQuestion)
+	// topicQuery.SetField("Topic")
 
-	mainQuery := bleve.NewBooleanQuery()
-	mainQuery.AddMust(questionQuery) // Pertanyaan baru harus cocok
-	mainQuery.AddMust(topicQuery)
+	// mainQuery := bleve.NewBooleanQuery()
+	// mainQuery.AddMust(questionQuery) // Pertanyaan baru harus cocok
+	// mainQuery.AddMust(topicQuery)
 
-	searchRequest := bleve.NewSearchRequest(mainQuery)
+	searchRequest := bleve.NewSearchRequest(questionQuery)
 	searchRequest.Size = 5 // Batasi jumlah hasil yang ditampilkan
 	searchResult, err := index.Search(searchRequest)
 	if err != nil {
@@ -259,13 +259,13 @@ func (s *tanyaJawabService) GetChatQuestion(newQuestion string) (string, string,
 	questionQuery.SetField("Question")
 
 	// Query untuk mencocokkan topik
-	topicQuery := bleve.NewMatchQuery(newQuestion)
-	topicQuery.SetField("Topic")
+	// topicQuery := bleve.NewMatchQuery(newQuestion)
+	// topicQuery.SetField("Topic")
 
-	mainQuery := bleve.NewBooleanQuery()
-	mainQuery.AddMust(questionQuery) // Pertanyaan baru harus cocok
-	mainQuery.AddMust(topicQuery)
-	searchRequest := bleve.NewSearchRequest(mainQuery)
+	// mainQuery := bleve.NewBooleanQuery()
+	// mainQuery.AddMust(questionQuery) // Pertanyaan baru harus cocok
+	// mainQuery.AddMust(topicQuery)
+	searchRequest := bleve.NewSearchRequest(questionQuery)
 	searchRequest.Size = 5 // Batasi jumlah hasil yang ditampilkan
 	searchResult, err := index.Search(searchRequest)
 	if err != nil {
