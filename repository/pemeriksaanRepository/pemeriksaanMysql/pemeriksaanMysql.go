@@ -14,6 +14,14 @@ type pemeriksaanRepository struct {
 	db *gorm.DB
 }
 
+// DeleteById implements pemeriksaanrepository.PemeriksaanRepository.
+func (r *pemeriksaanRepository) DeleteById(id int) error {
+	if err := r.db.Where("id_pemeriksaan = ?", id).Delete(&entity.Pemeriksaan{}).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
 func NewPemeriksaanRepository(db *gorm.DB) PemeriksaanRepository.PemeriksaanRepository {
 	return &pemeriksaanRepository{db: db}
 }
@@ -33,11 +41,20 @@ func (r *pemeriksaanRepository) Create(pemeriksaan entity.Pemeriksaan) (*entity.
 	return &pemeriksaan, nil
 }
 
-func (r *pemeriksaanRepository) FindByEmail(email string) ([]entity.Pemeriksaan, error) {
+func (r *pemeriksaanRepository) FindByEmail(email string, keterangan string) ([]entity.Pemeriksaan, error) {
 	var pemeriksaans []entity.Pemeriksaan
-	if err := r.db.Where("email = ?", email).Order("waktu asc").Find(&pemeriksaans).Error; err != nil {
-		return nil, err
+
+	if keterangan != "gemuk" && keterangan != "stunting" && keterangan != "normal" {
+
+		if err := r.db.Where("email = ?", email).Order("waktu asc").Find(&pemeriksaans).Error; err != nil {
+			return nil, err
+		}
+	} else {
+		if err := r.db.Where("email = ? and keterangan = ?", email, keterangan).Order("waktu asc").Find(&pemeriksaans).Error; err != nil {
+			return nil, err
+		}
 	}
+
 	return pemeriksaans, nil
 }
 

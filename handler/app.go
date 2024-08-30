@@ -127,10 +127,11 @@ func StartApp() {
 
 	PemeriksaanRoute := route.Group("/pemeriksaan")
 	{
-		PemeriksaanRoute.GET("/", pemeriksaanHandler.GetAllPemeriksaan)
+		//PemeriksaanRoute.GET("/", pemeriksaanHandler.GetAllPemeriksaan)
 		PemeriksaanRoute.POST("/", authService.Authentication(), pemeriksaanHandler.CreatePemeriksaan)
 		PemeriksaanRoute.POST("/upload-photo-pemeriksaan", authService.Authentication(), pemeriksaanHandler.UploadPhotoPemeriksaan)
-		PemeriksaanRoute.GET("/:email", pemeriksaanHandler.GetPemeriksaanByEmail)
+		PemeriksaanRoute.GET("/", authService.Authentication(), pemeriksaanHandler.GetPemeriksaanByEmail)
+		PemeriksaanRoute.DELETE("/:id", authService.Authentication(), pemeriksaanHandler.DeletePemeriksaanById)
 	}
 
 	AlarmRoute := route.Group("/alarm")
@@ -142,7 +143,7 @@ func StartApp() {
 	}
 
 	route.POST("/update-bot", tanyaJawabHandler.Update_Bot)
-	route.GET("/monitoring", authService.Authentication(), authService.AdminAndPakarAuthorization(), siswaHandler.GetAllSiswaWithPemeriksaan)
+	route.GET("/monitoring", authService.Authentication(), siswaHandler.GetAllSiswaWithPemeriksaan)
 
 	log.Fatalln(route.Run(":" + port))
 }

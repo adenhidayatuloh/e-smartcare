@@ -6,21 +6,30 @@ import (
 	"esmartcare/pkg"
 	"esmartcare/pkg/errs"
 	PemeriksaanRepository "esmartcare/repository/pemeriksaanRepository"
+	"fmt"
 	"time"
+
+	"math/rand"
 
 	"github.com/gin-gonic/gin"
 )
 
 type PemeriksaanService interface {
 	GetAllPemeriksaan() ([]entity.Pemeriksaan, error)
-	CreatePemeriksaan(request dto.CreateUpdatePemeriksaanRequest) (*entity.Pemeriksaan, error)
-	GetPemeriksaanByEmail(email string) ([]entity.Pemeriksaan, error)
+	CreatePemeriksaan(request dto.CreateUpdatePemeriksaanRequest, ctx *gin.Context) (*entity.Pemeriksaan, error)
+	GetPemeriksaanByEmail(email string, keterangan string) ([]entity.Pemeriksaan, error)
 	DeletePemeriksaanByEmail(email string) error
+	DeletePemeriksaanById(id int) error
 	UpdatePhotoPemeriksaan(email string, ctx *gin.Context) (*dto.CreateUpdatePemeriksaanRequest, errs.MessageErr)
 }
 
 type pemeriksaanService struct {
 	repo PemeriksaanRepository.PemeriksaanRepository
+}
+
+// DeletePemeriksaanById implements PemeriksaanService.
+func (s *pemeriksaanService) DeletePemeriksaanById(id int) error {
+	return s.repo.DeleteById(id)
 }
 
 func NewPemeriksaanService(repo PemeriksaanRepository.PemeriksaanRepository) PemeriksaanService {
@@ -31,7 +40,7 @@ func (s *pemeriksaanService) GetAllPemeriksaan() ([]entity.Pemeriksaan, error) {
 	return s.repo.FindAll()
 }
 
-func (s *pemeriksaanService) CreatePemeriksaan(request dto.CreateUpdatePemeriksaanRequest) (*entity.Pemeriksaan, error) {
+func (s *pemeriksaanService) CreatePemeriksaan(request dto.CreateUpdatePemeriksaanRequest, ctx *gin.Context) (*entity.Pemeriksaan, error) {
 	pemeriksaan := entity.Pemeriksaan{
 		Email:      request.Email,
 		Tinggi:     request.Tinggi,
@@ -39,25 +48,28 @@ func (s *pemeriksaanService) CreatePemeriksaan(request dto.CreateUpdatePemeriksa
 		Keterangan: request.Keterangan,
 	}
 
-	oldPemeriksaan, checkEmail := s.repo.GetPemeriksaanByEmail(pemeriksaan.Email)
+	pemeriksaan.Waktu = time.Now()
 
-	if checkEmail == nil {
+	randomizer := rand.New(rand.NewSource(5))
+	newKeyImage := fmt.Sprintf("%s-pemeriksaan-%d", pemeriksaan.Email, randomizer.Int())
+	urlImage, err := pkg.UploadImage("foto_pemeriksaan", newKeyImage, ctx)
+	// Di sini logic nya
 
-		pemeriksaan.Waktu = time.Now()
-
-		updatedUser, err := s.repo.UpdatePemeriksaan(oldPemeriksaan, &pemeriksaan)
-		if err != nil {
-			return nil, err
-		}
-
-		return updatedUser, nil
+	if err != nil {
+		return nil, err
 	}
+
+	if *urlImage == "" {
+		return nil, errs.NewBadRequest("Image not detected")
+	}
+
+	pemeriksaan.Foto = *urlImage
 
 	return s.repo.Create(pemeriksaan)
 }
 
-func (s *pemeriksaanService) GetPemeriksaanByEmail(email string) ([]entity.Pemeriksaan, error) {
-	return s.repo.FindByEmail(email)
+func (s *pemeriksaanService) GetPemeriksaanByEmail(email string, keterangan string) ([]entity.Pemeriksaan, error) {
+	return s.repo.FindByEmail(email, keterangan)
 }
 
 func (s *pemeriksaanService) DeletePemeriksaanByEmail(email string) error {
