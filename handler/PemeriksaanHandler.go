@@ -121,7 +121,7 @@ func (h *PemeriksaanHandler) DeletePemeriksaanById(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusNoContent, nil)
+	ctx.JSON(http.StatusOK, gin.H{"message": "Pemeriksaan deleted successfully"})
 }
 func (s *PemeriksaanHandler) UploadPhotoPemeriksaan(ctx *gin.Context) {
 
