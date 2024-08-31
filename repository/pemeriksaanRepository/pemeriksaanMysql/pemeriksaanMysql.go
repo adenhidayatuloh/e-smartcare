@@ -83,3 +83,13 @@ func (s *pemeriksaanRepository) UpdatePemeriksaan(oldPemeriksaan *entity.Pemerik
 
 	return oldPemeriksaan, nil
 }
+
+func (r *pemeriksaanRepository) FindById(id int) (*entity.Pemeriksaan, error) {
+	var pemeriksaan entity.Pemeriksaan
+
+	if err := r.db.First(&pemeriksaan, "id_pemeriksaan = ?", id).Error; err != nil {
+		return nil, errs.NewNotFound(fmt.Sprintf("pemeriksaan with id %d is not found", id))
+	}
+
+	return &pemeriksaan, nil
+}

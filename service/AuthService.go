@@ -3,6 +3,7 @@ package service
 import (
 	"esmartcare/entity"
 	"esmartcare/pkg/errs"
+	pemeriksaanrepository "esmartcare/repository/pemeriksaanRepository"
 	siswarepository "esmartcare/repository/siswaRepository"
 	"net/http"
 	"strconv"
@@ -20,16 +21,18 @@ type AuthService interface {
 	SiswaAuthorization() gin.HandlerFunc
 	AdminAndPakarAuthorization() gin.HandlerFunc
 	RiwayatAuthorization() gin.HandlerFunc
+	PemeriksaanAuthorization() gin.HandlerFunc
 }
 
 type authService struct {
-	userRepo    userrepository.UserRepository
-	siswaRepo   siswarepository.SiswaRepository
-	riwayatRepo riwayattanyajawabrepository.RiwayatTanyaJawabRepository
+	userRepo        userrepository.UserRepository
+	siswaRepo       siswarepository.SiswaRepository
+	riwayatRepo     riwayattanyajawabrepository.RiwayatTanyaJawabRepository
+	pemeriksaanRepo pemeriksaanrepository.PemeriksaanRepository
 }
 
-func NewAuthService(userRepo userrepository.UserRepository, siswaRepo siswarepository.SiswaRepository, riwayatRepo riwayattanyajawabrepository.RiwayatTanyaJawabRepository) AuthService {
-	return &authService{userRepo: userRepo, siswaRepo: siswaRepo, riwayatRepo: riwayatRepo}
+func NewAuthService(userRepo userrepository.UserRepository, siswaRepo siswarepository.SiswaRepository, riwayatRepo riwayattanyajawabrepository.RiwayatTanyaJawabRepository, pemeriksaanRepo pemeriksaanrepository.PemeriksaanRepository) AuthService {
+	return &authService{userRepo: userRepo, siswaRepo: siswaRepo, riwayatRepo: riwayatRepo, pemeriksaanRepo: pemeriksaanRepo}
 }
 
 func (a *authService) Authentication() gin.HandlerFunc {
@@ -150,6 +153,45 @@ func (a *authService) RiwayatAuthorization() gin.HandlerFunc {
 		_ = taskIDUint
 
 		task, err2 := a.riwayatRepo.FindById(uint(taskIDUint))
+		if err2 != nil {
+			ctx.AbortWithStatusJSON(http.StatusUnprocessableEntity, err2)
+			return
+		}
+
+		if task.Email == "" {
+			ctx.AbortWithStatusJSON(http.StatusUnprocessableEntity, "data not found")
+			return
+
+		}
+
+		if task.Email != userData.Email {
+			newError := errs.NewUnauthorized("You're not authorized to modify this task")
+			ctx.AbortWithStatusJSON(newError.StatusCode(), newError)
+			return
+		}
+
+		ctx.Next()
+	}
+}
+
+func (a *authService) PemeriksaanAuthorization() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		userData, ok := ctx.MustGet("userData").(*entity.User)
+		if !ok {
+			newError := errs.NewBadRequest("Failed to get user data")
+			ctx.AbortWithStatusJSON(newError.StatusCode(), newError)
+			return
+		}
+
+		taskID := ctx.Param("id")
+		taskIDInt, err := strconv.Atoi(taskID)
+		if err != nil {
+			newError := errs.NewBadRequest("Pemeriksaan id should be an unsigned integer")
+			ctx.AbortWithStatusJSON(newError.StatusCode(), newError)
+			return
+		}
+
+		task, err2 := a.pemeriksaanRepo.FindById(taskIDInt)
 		if err2 != nil {
 			ctx.AbortWithStatusJSON(http.StatusUnprocessableEntity, err2)
 			return

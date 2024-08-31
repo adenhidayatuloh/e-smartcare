@@ -13,7 +13,7 @@ type Siswa_pemeriksaan struct {
 	Kelas        string
 	Agama        string
 	FotoProfil   string
-	Pemeriksaan  Pemeriksaan1 `gorm:"foreignKey:Email;references:Email"`
+	Pemeriksaan  []Pemeriksaan1 `gorm:"foreignKey:Email;references:Email"`
 }
 
 func (Siswa_pemeriksaan) TableName() string {

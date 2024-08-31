@@ -65,9 +65,11 @@ func (s *SiswaHandler) CreateOrUpdateSiswa(ctx *gin.Context) {
 }
 
 func (h *SiswaHandler) GetAllSiswaWithPemeriksaan(c *gin.Context) {
-	siswa, err := h.siswaService.GetAllSiswaWithPemeriksaan()
+
+	keterangan := c.Query("keterangan")
+	siswa, err := h.siswaService.GetAllSiswaWithPemeriksaan(keterangan)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, siswa)

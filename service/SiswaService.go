@@ -14,7 +14,7 @@ import (
 type SiswaService interface {
 	UpdateProfilPhoto(email string, ctx *gin.Context) (*dto.CreateSiswaResponse, errs.MessageErr)
 	CreateOrUpdateSiswa(email string, payload *dto.CreateSiswaRequest) (*dto.CreateSiswaResponse, errs.MessageErr)
-	GetAllSiswaWithPemeriksaan() ([]entity.Siswa_pemeriksaan, errs.MessageErr)
+	GetAllSiswaWithPemeriksaan(keterangan string) ([]entity.Siswa_pemeriksaan, errs.MessageErr)
 	GetSiswa(email string) (*dto.CreateSiswaResponse, errs.MessageErr)
 }
 
@@ -176,6 +176,6 @@ func (s *siswaService) CreateOrUpdateSiswa(email string, payload *dto.CreateSisw
 	return CreateSiswaResponse, nil
 }
 
-func (s *siswaService) GetAllSiswaWithPemeriksaan() ([]entity.Siswa_pemeriksaan, errs.MessageErr) {
-	return s.siswaRepo.GetAllSiswaWithPemeriksaan()
+func (s *siswaService) GetAllSiswaWithPemeriksaan(keterangan string) ([]entity.Siswa_pemeriksaan, errs.MessageErr) {
+	return s.siswaRepo.GetAllSiswaWithPemeriksaan(keterangan)
 }

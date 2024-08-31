@@ -9,9 +9,8 @@ import (
 	"fmt"
 	"time"
 
-	"math/rand"
-
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type PemeriksaanService interface {
@@ -50,8 +49,8 @@ func (s *pemeriksaanService) CreatePemeriksaan(request dto.CreateUpdatePemeriksa
 
 	pemeriksaan.Waktu = time.Now()
 
-	randomizer := rand.New(rand.NewSource(5))
-	newKeyImage := fmt.Sprintf("%s-pemeriksaan-%d", pemeriksaan.Email, randomizer.Int())
+	newKey := uuid.New().String()
+	newKeyImage := fmt.Sprintf("%s-pemeriksaan-%s", pemeriksaan.Email, newKey)
 	urlImage, err := pkg.UploadImage("foto_pemeriksaan", newKeyImage, ctx)
 	// Di sini logic nya
 

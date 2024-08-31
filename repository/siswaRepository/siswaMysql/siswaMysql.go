@@ -76,12 +76,24 @@ func (s *siswaMySql) GetSiswaByEmail(email string) (*entity.Siswa, errs.MessageE
 	return &siswa, nil
 }
 
-func (r *siswaMySql) GetAllSiswaWithPemeriksaan() ([]entity.Siswa_pemeriksaan, errs.MessageErr) {
+func (r *siswaMySql) GetAllSiswaWithPemeriksaan(keterangan string) ([]entity.Siswa_pemeriksaan, errs.MessageErr) {
 	var siswa []entity.Siswa_pemeriksaan
 	// err := r.db.Preload("Pemeriksaan").Order("email ASC , Pemeriksaan.waktu ASC").Find(&siswa).Error
 
+	if keterangan != "normal" && keterangan != "gemuk" && keterangan != "stunting" {
+		err := r.db.Preload("Pemeriksaan", func(db *gorm.DB) *gorm.DB {
+			return db.Order("waktu ASC")
+		}).Order("email ASC").Find(&siswa).Error
+
+		if err != nil {
+			return nil, errs.NewUnprocessableEntity("Cannot Get Siswa")
+		}
+
+		return siswa, nil
+
+	}
 	err := r.db.Preload("Pemeriksaan", func(db *gorm.DB) *gorm.DB {
-		return db.Order("waktu ASC")
+		return db.Order("waktu ASC").Where("keterangan = ?", keterangan)
 	}).Order("email ASC").Find(&siswa).Error
 
 	if err != nil {

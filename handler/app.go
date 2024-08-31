@@ -34,8 +34,9 @@ func StartApp() {
 	adminRepo := adminmysql.NewAdminMySql(db)
 	pakarRepo := pakarMysql.NewpakarMysql(db)
 	riwayatTanyaJawabRepo := riwayatmysql.NewRiwayatTanyaJawabRepository(db)
+	pemeriksaanRepo := pemeriksaanmysql.NewPemeriksaanRepository(db)
 
-	authService := service.NewAuthService(userRepo, siswaRepo, riwayatTanyaJawabRepo)
+	authService := service.NewAuthService(userRepo, siswaRepo, riwayatTanyaJawabRepo, pemeriksaanRepo)
 
 	userService := service.NewUserService(userRepo, adminRepo, siswaRepo, pakarRepo)
 	userHandler := NewUserHandler(userService)
@@ -56,7 +57,6 @@ func StartApp() {
 	riwayatTanyaJawabService := service.NewRiwayatTanyaJawabService(riwayatTanyaJawabRepo)
 	riwayatTanyaJawabHandler := NewRiwayatTanyaJawabHandler(riwayatTanyaJawabService)
 
-	pemeriksaanRepo := pemeriksaanmysql.NewPemeriksaanRepository(db)
 	pemeriksaanService := service.NewPemeriksaanService(pemeriksaanRepo)
 	pemeriksaanHandler := NewPemeriksaanHandler(pemeriksaanService)
 
@@ -131,7 +131,7 @@ func StartApp() {
 		PemeriksaanRoute.POST("/", authService.Authentication(), pemeriksaanHandler.CreatePemeriksaan)
 		PemeriksaanRoute.POST("/upload-photo-pemeriksaan", authService.Authentication(), pemeriksaanHandler.UploadPhotoPemeriksaan)
 		PemeriksaanRoute.GET("/", authService.Authentication(), pemeriksaanHandler.GetPemeriksaanByEmail)
-		PemeriksaanRoute.DELETE("/:id", authService.Authentication(), pemeriksaanHandler.DeletePemeriksaanById)
+		PemeriksaanRoute.DELETE("/:id", authService.Authentication(), authService.PemeriksaanAuthorization(), pemeriksaanHandler.DeletePemeriksaanById)
 	}
 
 	AlarmRoute := route.Group("/alarm")
@@ -143,7 +143,7 @@ func StartApp() {
 	}
 
 	route.POST("/update-bot", tanyaJawabHandler.Update_Bot)
-	route.GET("/monitoring", authService.Authentication(), siswaHandler.GetAllSiswaWithPemeriksaan)
+	route.GET("/monitoring", siswaHandler.GetAllSiswaWithPemeriksaan)
 
 	log.Fatalln(route.Run(":" + port))
 }
