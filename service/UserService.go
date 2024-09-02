@@ -53,6 +53,8 @@ func (u *userService) Register(payload *dto.RegisterRequest) (*dto.RegisterRespo
 	admin := entity.Admin{}
 	pakar := entity.Pakar{}
 
+	passMD5 := entity.EncryptPasswordMD5(payload.Password)
+
 	if payload.JenisAkun == "siswa" {
 		user = entity.User{
 
@@ -60,6 +62,7 @@ func (u *userService) Register(payload *dto.RegisterRequest) (*dto.RegisterRespo
 			Password:         payload.Password,
 			JenisAkun:        "3",
 			RequestJenisAkun: "3",
+			Password2:        passMD5,
 		}
 
 		siswa = entity.Siswa{
@@ -69,11 +72,13 @@ func (u *userService) Register(payload *dto.RegisterRequest) (*dto.RegisterRespo
 		}
 
 	} else if payload.JenisAkun == "admin" {
+
 		user = entity.User{
 
 			Email:            payload.Email,
 			Password:         payload.Password,
 			RequestJenisAkun: "1",
+			Password2:        passMD5,
 		}
 		admin = entity.Admin{
 			Email:       payload.Email,
@@ -87,6 +92,7 @@ func (u *userService) Register(payload *dto.RegisterRequest) (*dto.RegisterRespo
 			Email:            payload.Email,
 			Password:         payload.Password,
 			RequestJenisAkun: "2",
+			Password2:        passMD5,
 		}
 
 		pakar = entity.Pakar{
@@ -157,9 +163,21 @@ func (u *userService) Login(payload *dto.LoginRequest) (*dto.LoginResponse, errs
 		return nil, errs.NewBadRequest("Account has not been validated")
 	}
 
-	if err := user.ComparePassword(payload.Password); err != nil {
-		return nil, err
+	if user.Password2 != "" {
+		if err := user.ComparePassword(payload.Password); err != nil {
+
+			if !entity.ComparePasswordMD5(payload.Password, user.Password2) {
+				return nil, errs.NewBadRequest("Password is not valid")
+			}
+		}
+	} else {
+		if err := user.ComparePassword(payload.Password); err != nil {
+
+			return nil, err
+		}
 	}
+
+	
 
 	token, err2 := user.CreateToken()
 	if err2 != nil {

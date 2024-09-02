@@ -8,6 +8,9 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
+
+	"crypto/md5"
+	"encoding/hex"
 )
 
 var jwtSecret = "SangatRahasia"
@@ -18,6 +21,7 @@ type User struct {
 	Password         string
 	JenisAkun        string
 	RequestJenisAkun string
+	Password2        string
 }
 
 type ResultsJoinUsers struct {
@@ -129,4 +133,17 @@ func (u *User) bindTokenToUserEntity(claim jwt.MapClaims) errs.MessageErr {
 	u.JenisAkun = role
 
 	return nil
+}
+
+// Fungsi untuk mengenkripsi password menggunakan MD5
+func EncryptPasswordMD5(password string) string {
+	hash := md5.New()
+	hash.Write([]byte(password))
+	return hex.EncodeToString(hash.Sum(nil))
+}
+
+// Fungsi untuk membandingkan password yang diinput dengan password yang sudah dienkripsi
+func ComparePasswordMD5(inputPassword, hashedPassword string) bool {
+	encryptedInputPassword := EncryptPasswordMD5(inputPassword)
+	return encryptedInputPassword == hashedPassword
 }
