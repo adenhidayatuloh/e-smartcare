@@ -27,7 +27,7 @@ var (
 func GetDBConfig() gorm.Dialector {
 
 	dbConfig := fmt.Sprintf(
-		"%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+		"%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local&tls=true",
 		user,
 		password,
 		host,
